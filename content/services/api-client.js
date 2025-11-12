@@ -19,7 +19,7 @@ window.BackgroundApiClient = class BackgroundTrackingClient {
     this._isShuttingDown = false;
     this._rateLimitStatus = null;
     this._pendingCount = 0;
-    
+
     // Setup background message handling
     this.setupBackgroundMessageHandling();
   }
@@ -63,7 +63,7 @@ window.BackgroundApiClient = class BackgroundTrackingClient {
   async startBackgroundTracking(channelName, config) {
     try {
       this.channelName = channelName;
-      
+
       const response = await chrome.runtime.sendMessage({
         type: 'START_BACKGROUND_TRACKING',
         channelName,
@@ -146,7 +146,7 @@ window.BackgroundApiClient = class BackgroundTrackingClient {
   }
 
   handleBackgroundUpdate(message) {
-    
+
     if (message.channelName !== this.channelName) {
       return; // Update for different channel
     }
@@ -222,8 +222,7 @@ window.BackgroundApiClient = class BackgroundTrackingClient {
   }
 
   handleCleanupUpdate(data) {
-    console.log('handleCleanupUpdate called with data:', data);
-    
+
     // Handle delta update - only remove specific viewers
     if (data.removedUsernames) {
       // Delta update: remove specific viewers
@@ -237,7 +236,7 @@ window.BackgroundApiClient = class BackgroundTrackingClient {
         this.trackingData.viewers.set(viewer.username, viewer);
       }
     }
-    
+
     // Notify observers    
     this.notify('viewersCleanedUp', {
       removedCount: data.removedCount,
@@ -309,7 +308,7 @@ window.BackgroundApiClient = class BackgroundTrackingClient {
 
   async forceStartTracking(channelName) {
     return chrome.runtime.sendMessage({
-      type: 'FORCE_START_TRACKING', 
+      type: 'FORCE_START_TRACKING',
       channelName
     });
   }
