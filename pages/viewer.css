@@ -280,8 +280,8 @@ body {
 }
 
 .tvm-following-user-avatar {
-  width: 90px;
-  height: 90px;
+  width: 160px;
+  height: 160px;
   border-radius: 8px;
   border: 2px solid #2e2e35;
   object-fit: cover;
@@ -349,9 +349,8 @@ body {
 }
 
 .tvm-following-created {
-  font-size: 13px;
+  font-size: 11px;
   color: #adadb8;
-  margin-bottom: 4px;
 }
 
 .tvm-following-created.loading {
@@ -360,9 +359,11 @@ body {
 }
 
 .tvm-following-date {
-  font-size: 12px;
+  font-size: 14px;
   color: #adadb8;
   font-family: 'Monaco', 'Consolas', monospace;
+  margin-bottom: 4px;
+
 }
 
 /* Buttons */
@@ -542,11 +543,6 @@ body {
 
   .tvm-following-item {
     padding: 12px 15px;
-  }
-
-  .tvm-following-user-avatar {
-    width: 70px;
-    height: 70px;
   }
 
   .tvm-waiting-content {

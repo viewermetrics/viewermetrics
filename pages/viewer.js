@@ -429,7 +429,9 @@ class ViewerPageManager {
       const user = follow.user || follow;
       const username = user.displayName || user.login || 'Unknown';
       const login = user.login || username.toLowerCase();
-      const followDate = new Date(follow.followedAt || follow.followed_at || Date.now()).toLocaleDateString();
+      const followDateTime = new Date(follow.followedAt || follow.followed_at || Date.now());
+      const followDate = followDateTime.toLocaleDateString() + ' ' +
+        followDateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
       // Avatar with loading state
       const avatarUrl = user.profileImageURL || user.profile_image_url ||
@@ -452,8 +454,8 @@ class ViewerPageManager {
         </div>
         <div class="tvm-following-info">
           <div class="tvm-following-name">${username}</div>
-          <div class="tvm-following-created ${!user.createdAt ? 'loading' : ''}">${createdDate}</div>
-          <div class="tvm-following-date">Followed: ${followDate}</div>
+          <div class="tvm-following-date">${followDate}</div>
+          <div class="tvm-following-created ${!user.createdAt ? 'loading' : ''}">Created: ${createdDate}</div>
         </div>
       `;
 
