@@ -1,8 +1,8 @@
 // Creation Chart component for account creation date analysis
 window.CreationChart = class CreationChart {
-  constructor(dataManager, configManager, errorHandler, uiManager = null) {
+  constructor(dataManager, settingsManager, errorHandler, uiManager = null) {
     this.dataManager = dataManager;
-    this.configManager = configManager;
+    this.settingsManager = settingsManager;
     this.errorHandler = errorHandler;
     this.uiManager = uiManager;
     this.chart = null;
@@ -24,7 +24,7 @@ window.CreationChart = class CreationChart {
       throw new Error('Creation chart canvas not found');
     }
 
-    const config = this.configManager.get();
+    const config = this.settingsManager.get();
 
     this.chart = new Chart(ctx, {
       type: 'bar',
@@ -57,7 +57,7 @@ window.CreationChart = class CreationChart {
 
   getOptions(config) {
     const chartManager = this; // Store reference for the onClick callback
-    
+
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -65,7 +65,7 @@ window.CreationChart = class CreationChart {
         padding: { bottom: 10 }
       },
       plugins: {
-        legend: { 
+        legend: {
           display: true,
           position: 'top',
           labels: {
@@ -88,18 +88,18 @@ window.CreationChart = class CreationChart {
           mode: 'index',
           intersect: false,
           callbacks: {
-            title: function(context) {
+            title: function (context) {
               if (context[0] && context[0].label) {
                 return context[0].label;
               }
               return '';
             },
-            label: function(context) {
+            label: function (context) {
               const label = context.dataset.label || '';
               const value = context.parsed.y || 0;
               return `${label}: ${value} accounts`;
             },
-            footer: function(tooltipItems) {
+            footer: function (tooltipItems) {
               const total = tooltipItems.reduce((sum, item) => sum + (item.parsed.y || 0), 0);
               return `Total: ${total} accounts`;
             }
@@ -133,7 +133,7 @@ window.CreationChart = class CreationChart {
             color: '#adadb8',
             font: { size: 11 },
             precision: 0,
-            callback: function(value) {
+            callback: function (value) {
               return Math.round(value);
             }
           },
@@ -153,14 +153,14 @@ window.CreationChart = class CreationChart {
           // Try to find the clicked element manually
           const canvasPosition = Chart.helpers.getRelativePosition(event, chart);
           const dataX = chart.scales.x.getValueForPixel(canvasPosition.x);
-          
+
           // Find the closest data point
           const histogram = chartManager.dataManager.getCreationDateHistogram();
           if (histogram && histogram.length > 0) {
             // Find the closest bar by x position
             let closestIndex = -1;
             let closestDistance = Infinity;
-            
+
             histogram.forEach((item, index) => {
               const itemDate = new Date(item.date).getTime();
               const distance = Math.abs(itemDate - dataX);
@@ -169,13 +169,13 @@ window.CreationChart = class CreationChart {
                 closestIndex = index;
               }
             });
-            
+
             if (closestIndex >= 0) {
               const date = new Date(histogram[closestIndex].date);
               const year = date.getFullYear();
               const month = date.getMonth() + 1;
               const yearMonth = `${year}-${month.toString().padStart(2, '0')}`;
-              
+
               if (chartManager.uiManager) {
                 chartManager.uiManager.setDateFilter(yearMonth);
               }
@@ -183,18 +183,18 @@ window.CreationChart = class CreationChart {
           }
           return;
         }
-        
+
         if (activeElements.length > 0 && chartManager.uiManager) {
           const activeElement = activeElements[0];
           const dataIndex = activeElement.index;
           const histogram = chartManager.dataManager.getCreationDateHistogram();
-          
+
           if (histogram && histogram[dataIndex]) {
             const date = new Date(histogram[dataIndex].date);
             const year = date.getFullYear();
             const month = date.getMonth() + 1; // getMonth() returns 0-11, we want 1-12
             const yearMonth = `${year}-${month.toString().padStart(2, '0')}`;
-            
+
             // Set the date filter in the UI manager
             chartManager.uiManager.setDateFilter(yearMonth);
           }
@@ -223,7 +223,7 @@ window.CreationChart = class CreationChart {
 
     // Determine data source based on viewing mode
     let accountGraphData, sourceMetadata;
-    
+
     if (this.dataManager.isShowingLive()) {
       // Use live data
       accountGraphData = this.dataManager.state.metadata.accountGraphMonthData || [];
@@ -239,7 +239,7 @@ window.CreationChart = class CreationChart {
         sourceMetadata = {};
       }
     }
-    
+
     if (accountGraphData.length === 0) {
       // No data available
       this.chart.data.labels = [];
@@ -252,13 +252,13 @@ window.CreationChart = class CreationChart {
 
     // Sort data by month
     const sortedData = [...accountGraphData].sort((a, b) => a.month.localeCompare(b.month));
-    
+
     // Extract labels and data
     const labels = sortedData.map(item => {
       const date = new Date(item.month + '-01');
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     });
-    
+
     const nonBotData = sortedData.map(item => item.nonBots || 0);
     const botData = sortedData.map(item => item.bots || 0);
 
@@ -271,12 +271,12 @@ window.CreationChart = class CreationChart {
     this.chart.data.labels = labels;
     this.chart.data.datasets[0].data = nonBotData; // Non-bots
     this.chart.data.datasets[1].data = botData;    // Bots
-    
+
     // Update Y-axis configuration
     this.chart.options.scales.y.suggestedMax = suggestedMax;
 
     this.chart.update('none');
-    
+
     this.updateStats();
     this.updateYAxisTitle();
   }
@@ -303,7 +303,7 @@ window.CreationChart = class CreationChart {
 
       // Determine data source based on viewing mode
       let accountsInBotRange;
-      
+
       if (this.dataManager.isShowingLive()) {
         // Use live data
         accountsInBotRange = this.dataManager.state.metadata.accountsInBotRange || 0;
@@ -316,7 +316,7 @@ window.CreationChart = class CreationChart {
           accountsInBotRange = 0;
         }
       }
-      
+
       statsElement.textContent = `${accountsInBotRange} accounts`;
     } catch (error) {
       this.errorHandler?.handle(error, 'CreationChart Update Stats');
@@ -329,7 +329,7 @@ window.CreationChart = class CreationChart {
 
       // Determine data source based on viewing mode
       let metadata;
-      
+
       if (this.dataManager.isShowingLive()) {
         // Use live data
         metadata = this.dataManager.state.metadata;
@@ -345,7 +345,7 @@ window.CreationChart = class CreationChart {
 
       const totalNonBots = metadata.accountGraphMonthData?.reduce((sum, month) => sum + month.nonBots, 0) || 0;
       const totalMonths = metadata.accountGraphMonthData?.length || 0;
-      
+
       const averagePerMonth = totalMonths > 0 ? (totalNonBots / totalMonths).toFixed(1) : 0;
 
       const maxExpectedPostStartAccounts = metadata.maxExpectedPostStartAccounts || 0;

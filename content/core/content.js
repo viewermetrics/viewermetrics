@@ -14,7 +14,7 @@ class TwitchViewerMetrics {
   constructor() {
     // Simplified - only need basic managers for the simple UI
     this.errorHandler = new window.ErrorHandler();
-    this.configManager = new window.ConfigManager();
+    this.settingsManager = new window.SettingsManager(this.errorHandler);
 
     // State
     this.channelName = null;

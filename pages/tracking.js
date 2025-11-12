@@ -288,15 +288,26 @@ class TrackingPageManager {
 
     // Properly cleanup existing tracking system before reinitializing
     if (this.trackingMetrics) {
-      // Close any open popups before destroying managers
+      // Close any open popups and destroy popup manager before destroying UI
       if (this.trackingMetrics.uiManager && this.trackingMetrics.uiManager.popupManager) {
-        this.trackingMetrics.uiManager.popupManager.closeUserPopup();
+        this.trackingMetrics.uiManager.popupManager.destroy();
+      }
+
+      // Clean up any orphaned popups from the DOM
+      if (window.PopupManager) {
+        window.PopupManager.cleanupOrphanedPopups();
       }
 
       // Destroy chart manager to free up canvas elements
       if (this.trackingMetrics.chartManager) {
         this.trackingMetrics.chartManager.destroy();
       }
+
+      // Destroy UI manager to clean up all event listeners
+      if (this.trackingMetrics.uiManager) {
+        this.trackingMetrics.uiManager.destroy();
+      }
+
       this.trackingMetrics = null;
     }
 
@@ -358,30 +369,27 @@ class TrackingPageManager {
 
     // Initialize the tracking system similar to content script
     const errorHandler = new window.ErrorHandler();
-    const configManager = new window.ConfigManager();
+    const settingsManager = new window.SettingsManager(errorHandler);
     const apiClient = new window.BackgroundApiClient(errorHandler);
-    const dataManager = new window.EnhancedDataManager(configManager, errorHandler, apiClient);
-    const uiManager = new window.UIManager(dataManager, configManager, errorHandler, apiClient);
-    const chartManager = new window.ChartManager(dataManager, configManager, errorHandler, this.channelName, uiManager);
+    const dataManager = new window.EnhancedDataManager(settingsManager, errorHandler, apiClient);
+    const uiManager = new window.UIManager(dataManager, settingsManager, errorHandler, apiClient);
+    const chartManager = new window.ChartManager(dataManager, settingsManager, errorHandler, this.channelName, uiManager);
 
     // Set chart manager reference in UI manager
     uiManager.chartManager = chartManager;
-    const settingsManager = new window.SettingsManager(configManager, errorHandler);
 
     // Load configuration
-    await configManager.load();
-    await settingsManager.init();
+    await settingsManager.load();
 
     // Create tracking metrics instance
     const self = this; // Store reference to TrackingPageManager
     this.trackingMetrics = {
       errorHandler,
-      configManager,
+      settingsManager,
       apiClient,
       dataManager,
       uiManager,
       chartManager,
-      settingsManager,
       channelName: this.channelName,
       isActive: false,
 
@@ -399,7 +407,7 @@ class TrackingPageManager {
           await chartManager.initGraphs();
 
           // Start background tracking
-          const config = configManager.get();
+          const config = settingsManager.get();
           const bgTrackingResult = await apiClient.startBackgroundTracking(this.channelName, config);
 
           if (!bgTrackingResult.success) {

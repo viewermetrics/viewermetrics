@@ -4,17 +4,19 @@ window.PopupManager = class PopupManager {
   static cleanupOrphanedPopups() {
     const existingPopup = document.getElementById('tvm-user-popup');
     if (existingPopup) {
+      console.log('Cleaning up orphaned popup from previous instance');
+
       // Clean up any stored event handlers
       if (existingPopup._handlers) {
         Object.entries(existingPopup._handlers).forEach(([eventType, handlers]) => {
           handlers.forEach(handler => {
-            existingPopup.removeEventListener(eventType, handler, true);
+            existingPopup.removeEventListener(eventType, handler, { capture: true });
           });
         });
       }
-      
+
       existingPopup.remove();
-      
+
       // Clean up any global escape handlers
       const handlers = document._popupEscapeHandlers || [];
       handlers.forEach(handler => {
@@ -40,7 +42,7 @@ window.PopupManager = class PopupManager {
     try {
       // Get user data from data manager
       const viewer = this.dataManager.state.viewers.get(username.toLowerCase());
-      
+
       // If viewer data is not found, it might be during a channel switch
       // Instead of showing an error, proceed with API fetching
       if (!viewer) {
@@ -51,29 +53,29 @@ window.PopupManager = class PopupManager {
       this.showLoadingPopup(username);
 
       // Get additional data from API if not already available
-      let userInfo = viewer?.profileImageURL ? 
+      let userInfo = viewer?.profileImageURL ?
         { profileImageURL: viewer.profileImageURL, ...viewer } : null;
-      
+
       const apiCalls = [];
-      
+
       // Only fetch user info if we don't have profile image data
       if (!userInfo) {
         apiCalls.push(this.apiClient.getUserInfo(this.channelName || 'unknown', [username], 1)); // High priority for popup
       }
-      
+
       // Always fetch following data
       apiCalls.push(this.apiClient.getUserFollowing([username], { limit: 50, getAllPages: false }, 1)); // High priority for popup
 
       const results = await Promise.all(apiCalls);
-      
+
       // Extract results based on what we fetched
       if (!userInfo) {
         const userInfoResponse = results[0];
         userInfo = userInfoResponse.userInfo?.[0];
         const following = results[1]?.followingData?.[0];
-        
+
         // If we don't have local viewer data, create a minimal viewer object
-        const viewerData = viewer || { 
+        const viewerData = viewer || {
           username: username,
           displayName: username,
           firstSeen: Date.now(),
@@ -82,15 +84,15 @@ window.PopupManager = class PopupManager {
           authenticated: true,
           seen: 1
         };
-        
+
         // Close loading popup and show full popup
         this.closeUserPopup();
         this.showFullUserPopup(viewerData, userInfo, following);
       } else {
         const following = results[0]?.followingData?.[0];
-        
+
         // If we don't have local viewer data, create a minimal viewer object
-        const viewerData = viewer || { 
+        const viewerData = viewer || {
           username: username,
           displayName: username,
           firstSeen: Date.now(),
@@ -99,7 +101,7 @@ window.PopupManager = class PopupManager {
           authenticated: true,
           seen: 1
         };
-        
+
         // Close loading popup and show full popup
         this.closeUserPopup();
         this.showFullUserPopup(viewerData, userInfo, following);
@@ -113,9 +115,12 @@ window.PopupManager = class PopupManager {
   }
 
   showLoadingPopup(username) {
+    // Clean up any orphaned popups from previous instances first
+    PopupManager.cleanupOrphanedPopups();
+
     // Clean up any existing popup first
     this.closeUserPopup();
-    
+
     const popup = document.createElement('div');
     popup.id = 'tvm-user-popup';
     popup.className = 'tvm-user-popup';
@@ -126,9 +131,12 @@ window.PopupManager = class PopupManager {
   }
 
   showFullUserPopup(viewer, userInfo, following) {
+    // Clean up any orphaned popups from previous instances first
+    PopupManager.cleanupOrphanedPopups();
+
     // Clean up any existing popup first
     this.closeUserPopup();
-    
+
     const popup = document.createElement('div');
     popup.id = 'tvm-user-popup';
     popup.className = 'tvm-user-popup';
@@ -147,7 +155,7 @@ window.PopupManager = class PopupManager {
     // Store following data for use in event handlers
     this.currentFollowingList = followingList;
     this.isFullListLoaded = false;
-    
+
     console.log('Following interactions set up for', followingList.length, 'items');
   }
 
@@ -170,7 +178,7 @@ window.PopupManager = class PopupManager {
     // Use event delegation with more specific targeting
     const mainHandler = (event) => {
       console.log('Popup event:', event.type, event.target.className, event.target.id);
-      
+
       // Close button
       if (event.target.matches('.tvm-user-popup-close')) {
         console.log('Popup close button clicked');
@@ -183,6 +191,8 @@ window.PopupManager = class PopupManager {
       // Click outside to close (on popup background)
       if (event.target === popup) {
         console.log('Clicked outside popup, closing');
+        event.preventDefault();
+        event.stopPropagation();
         this.closeUserPopup();
         return;
       }
@@ -214,11 +224,11 @@ window.PopupManager = class PopupManager {
       }
     };
 
-    // Add all event listeners
-    popup.addEventListener('click', mainHandler, true); // Use capture phase
-    popup.addEventListener('input', inputHandler, true);
-    popup.addEventListener('change', changeHandler, true);
-    popup.addEventListener('click', buttonHandler, true); // Separate for buttons
+    // Add all event listeners (use capture phase and once:false to prevent duplicates)
+    popup.addEventListener('click', mainHandler, { capture: true });
+    popup.addEventListener('input', inputHandler, { capture: true });
+    popup.addEventListener('change', changeHandler, { capture: true });
+    popup.addEventListener('click', buttonHandler, { capture: true }); // Separate for buttons
 
     // Store references for cleanup
     popup._handlers = {
@@ -226,38 +236,51 @@ window.PopupManager = class PopupManager {
       input: [inputHandler],
       change: [changeHandler]
     };
-    
+
     // Mark that handlers are set up
     popup._handlersSetup = true;
 
     // Escape key to close (this needs to be on document)
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
         this.closeUserPopup();
       }
     };
-    
-    // Only add escape handler if we don't already have one
-    if (!this.currentEscapeHandler) {
-      document.addEventListener('keydown', handleEscape);
-      
-      // Store the escape handler globally for cleanup
-      if (!document._popupEscapeHandlers) {
-        document._popupEscapeHandlers = [];
+
+    // Remove any existing escape handler first
+    if (this.currentEscapeHandler) {
+      document.removeEventListener('keydown', this.currentEscapeHandler);
+
+      // Remove from global tracking
+      if (document._popupEscapeHandlers) {
+        const index = document._popupEscapeHandlers.indexOf(this.currentEscapeHandler);
+        if (index > -1) {
+          document._popupEscapeHandlers.splice(index, 1);
+        }
       }
-      document._popupEscapeHandlers.push(handleEscape);
-      this.currentEscapeHandler = handleEscape;
     }
+
+    // Add new escape handler
+    document.addEventListener('keydown', handleEscape);
+
+    // Store the escape handler globally for cleanup
+    if (!document._popupEscapeHandlers) {
+      document._popupEscapeHandlers = [];
+    }
+    document._popupEscapeHandlers.push(handleEscape);
+    this.currentEscapeHandler = handleEscape;
 
     console.log('Popup event listeners set up successfully');
   }
 
   cleanupPopupHandlers(popup) {
     if (popup._handlers) {
-      // Remove all stored handlers
+      // Remove all stored handlers with the same options they were added with
       Object.entries(popup._handlers).forEach(([eventType, handlers]) => {
         handlers.forEach(handler => {
-          popup.removeEventListener(eventType, handler, true);
+          popup.removeEventListener(eventType, handler, { capture: true });
         });
       });
       popup._handlers = null;
@@ -272,8 +295,8 @@ window.PopupManager = class PopupManager {
       const sortSelect = document.getElementById('tvm-following-sort');
       const searchTerm = searchInput?.value.toLowerCase() || '';
       const sortBy = sortSelect?.value || 'followedAt';
-      
-      let filteredList = this.currentFollowingList.filter(follow => 
+
+      let filteredList = this.currentFollowingList.filter(follow =>
         follow.user.login.toLowerCase().includes(searchTerm) ||
         follow.user.displayName.toLowerCase().includes(searchTerm)
       );
@@ -287,8 +310,8 @@ window.PopupManager = class PopupManager {
       const listContainer = document.getElementById('tvm-following-list');
       if (listContainer) {
         listContainer.innerHTML = HTMLTemplates.generateFollowingList(
-          filteredList, 
-          null, 
+          filteredList,
+          null,
           !this.isFullListLoaded && this.currentFollowingList.length >= 50
         );
       }
@@ -365,15 +388,15 @@ window.PopupManager = class PopupManager {
       this.cleanupPopupHandlers(popup);
       popup.remove();
     }
-    
+
     // Clean up stored following data
     this.currentFollowingList = null;
     this.isFullListLoaded = false;
-    
+
     // Clean up escape key listener
     if (this.currentEscapeHandler) {
       document.removeEventListener('keydown', this.currentEscapeHandler);
-      
+
       // Remove from global tracking
       if (document._popupEscapeHandlers) {
         const index = document._popupEscapeHandlers.indexOf(this.currentEscapeHandler);
@@ -381,8 +404,22 @@ window.PopupManager = class PopupManager {
           document._popupEscapeHandlers.splice(index, 1);
         }
       }
-      
+
       this.currentEscapeHandler = null;
+    }
+  }
+
+  // Add a cleanup method to be called when PopupManager is being destroyed
+  destroy() {
+    // Close any open popup
+    this.closeUserPopup();
+
+    // Clean up all escape handlers
+    if (document._popupEscapeHandlers) {
+      document._popupEscapeHandlers.forEach(handler => {
+        document.removeEventListener('keydown', handler);
+      });
+      document._popupEscapeHandlers = [];
     }
   }
 }

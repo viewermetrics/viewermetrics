@@ -1,8 +1,8 @@
-// Debug Manager for handling debug information display and system utilities
+// Debug Manager for handling debug information display
 window.DebugManager = class DebugManager {
-  constructor(dataManager, configManager, errorHandler) {
+  constructor(dataManager, settingsManager, errorHandler) {
     this.dataManager = dataManager;
-    this.configManager = configManager;
+    this.settingsManager = settingsManager;
     this.errorHandler = errorHandler;
   }
 
@@ -95,7 +95,7 @@ window.DebugManager = class DebugManager {
     try {
       const debugInfo = await this.dataManager.getDebugInfo();
       const systemInfo = await this.getSystemInfo();
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
 
       const exportData = {
         timestamp: new Date().toISOString(),

@@ -1,31 +1,31 @@
-// Chart Manager for coordinating chart operations
+// Chart Manager for handling chart operations with Chart.js
 window.ChartManager = class ChartManager {
-  constructor(dataManager, configManager, errorHandler, channelName = null, uiManager = null) {
+  constructor(dataManager, settingsManager, errorHandler, channelName = null, uiManager = null) {
     this.dataManager = dataManager;
-    this.configManager = configManager;
+    this.settingsManager = settingsManager;
     this.errorHandler = errorHandler;
     this.uiManager = uiManager;
     this.channelName = channelName;
-    this.mainChart = new MainChart(dataManager, configManager, errorHandler, channelName);
-    this.creationChart = new CreationChart(dataManager, configManager, errorHandler, uiManager);
+    this.mainChart = new MainChart(dataManager, settingsManager, errorHandler, channelName);
+    this.creationChart = new CreationChart(dataManager, settingsManager, errorHandler, uiManager);
     this.isInitialized = false;
     this.isPaused = false;
     this.autoPauseTimer = null;
     this.lastViewerCount = 0;
-    
+
     // Chart update throttling to improve performance with large datasets
     this.lastChartUpdate = 0;
-    this.chartUpdateThrottle = 3000; // Update charts max once every 3 seconds (reduced from 10s)
+    this.chartUpdateThrottle = settingsManager.get('chartUpdateThrottle');
     this.pendingUpdate = false;
     this.updateTimer = null;
-    
+
     // Subscribe to data changes
     this.dataManager.subscribe((event, data) => {
       this.handleDataChange(event, data);
     });
 
     // Subscribe to config changes
-    this.configManager.subscribe((config) => {
+    this.settingsManager.subscribe((config) => {
       this.handleConfigChange(config);
     });
   }
@@ -54,7 +54,7 @@ window.ChartManager = class ChartManager {
         case 'viewersUpdated':
         case 'botsDetected':
           this.throttledUpdateGraphs();
-          
+
           // Update creation chart threshold if auto-adjustment is enabled
           if (this.creationChart && (event === 'historyUpdated' || event === 'userInfoUpdated' || event === 'botsDetected')) {
             if (this.creationChart.updateThreshold()) {
@@ -78,6 +78,11 @@ window.ChartManager = class ChartManager {
 
   handleConfigChange(config) {
     try {
+      // Update chart throttle if changed
+      if (config.chartUpdateThrottle !== undefined) {
+        this.chartUpdateThrottle = config.chartUpdateThrottle;
+      }
+
       // Handle auto-pause configuration changes
       if (!config.autoPauseGraphsOnZeroViewers && this.autoPauseTimer) {
         // If auto-pause was disabled and there's an active timer, clear it
@@ -99,7 +104,7 @@ window.ChartManager = class ChartManager {
       await this.mainChart.init();
       await this.creationChart.init();
       this.isInitialized = true;
-      
+
     } catch (error) {
       this.errorHandler?.handle(error, 'ChartManager Init Graphs');
     }
@@ -108,13 +113,13 @@ window.ChartManager = class ChartManager {
   // Throttled update methods to improve performance with large datasets
   throttledUpdateGraphs() {
     const now = Date.now();
-    
+
     // If enough time has passed since last update, update immediately
     if (now - this.lastChartUpdate >= this.chartUpdateThrottle) {
       this.updateGraphs();
       this.lastChartUpdate = now;
       this.pendingUpdate = false;
-      
+
       // Clear any pending timer
       if (this.updateTimer) {
         clearTimeout(this.updateTimer);
@@ -124,7 +129,7 @@ window.ChartManager = class ChartManager {
       // Schedule an update for when the throttle period expires
       this.pendingUpdate = true;
       const delay = this.chartUpdateThrottle - (now - this.lastChartUpdate);
-      
+
       this.updateTimer = setTimeout(() => {
         this.updateGraphs();
         this.lastChartUpdate = Date.now();
@@ -137,13 +142,13 @@ window.ChartManager = class ChartManager {
   throttledUpdateCreationChart() {
     // For creation chart updates, use the same throttling logic but only update creation chart
     const now = Date.now();
-    
+
     if (now - this.lastChartUpdate >= this.chartUpdateThrottle) {
       this.updateCreationChart();
     } else if (!this.pendingUpdate) {
       // Schedule an update for when the throttle period expires
       const delay = this.chartUpdateThrottle - (now - this.lastChartUpdate);
-      
+
       setTimeout(() => {
         this.updateCreationChart();
       }, delay);
@@ -156,7 +161,7 @@ window.ChartManager = class ChartManager {
     try {
       // Check for auto-pause conditions
       this.checkAutoPauseConditions();
-      
+
       // Only update if not paused
       if (!this.isPaused) {
         this.updateMainChart();
@@ -203,12 +208,12 @@ window.ChartManager = class ChartManager {
   }
 
   checkAutoPauseConditions() {
-    const config = this.configManager.get();
+    const config = this.settingsManager.get();
     if (!config.autoPauseGraphsOnZeroViewers) return;
 
     const history = this.dataManager.getHistory();
     const currentViewers = history.length > 0 ? history[history.length - 1].totalViewers : 0;
-    
+
     // If viewers dropped to 0 and we haven't started a timer yet
     if (currentViewers === 0 && this.lastViewerCount > 0 && !this.autoPauseTimer && !this.isPaused) {
       this.autoPauseTimer = setTimeout(() => {
@@ -218,15 +223,15 @@ window.ChartManager = class ChartManager {
           const event = new CustomEvent('tvm-graphs-auto-paused');
           document.dispatchEvent(event);
         }
-      }, 5 * 60 * 1000); // Hardcoded 5 minutes
+      }, config.autoPauseDelay);
     }
-    
+
     // If viewers returned, clear the timer
     if (currentViewers > 0 && this.autoPauseTimer) {
       clearTimeout(this.autoPauseTimer);
       this.autoPauseTimer = null;
     }
-    
+
     this.lastViewerCount = currentViewers;
   }
 
@@ -236,17 +241,17 @@ window.ChartManager = class ChartManager {
       clearTimeout(this.updateTimer);
       this.updateTimer = null;
     }
-    
+
     // Clean up auto-pause timer
     if (this.autoPauseTimer) {
       clearTimeout(this.autoPauseTimer);
       this.autoPauseTimer = null;
     }
-    
+
     // Destroy charts
     this.mainChart.destroy();
     this.creationChart.destroy();
-    
+
     this.isInitialized = false;
   }
 }
