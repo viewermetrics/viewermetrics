@@ -1,18 +1,7 @@
 // Enhanced Data Manager with observer pattern and better memory management
 window.EnhancedDataManager = class DataManager {
-  // Constants for better maintainability
-  static CONSTANTS = {
-    CLEANUP_INTERVAL: 60 * 1000, // 1 minute
-    STUCK_REQUEST_THRESHOLD: 10 * 60 * 1000, // 10 minutes
-    MAX_API_ATTEMPTS: 5,
-    MEMORY_ESTIMATE: {
-      VIEWER: 200, // bytes per viewer
-      HISTORY_POINT: 32 // bytes per history point
-    }
-  };
-
-  constructor(configManager, errorHandler, apiClient) {
-    this.configManager = configManager;
+  constructor(settingsManager, errorHandler, apiClient) {
+    this.settingsManager = settingsManager;
     this.errorHandler = errorHandler;
     this.apiClient = apiClient;
 
@@ -29,13 +18,13 @@ window.EnhancedDataManager = class DataManager {
       showingLive: true,
       showingHistoryPoint: null
     };
-    
+
     // Performance optimization caches
     this.viewerListCache = {
       lastCacheTime: 0,
       lastParams: null,
       cachedResult: null,
-      cacheTimeout: 5000 // Cache for 5 seconds
+      cacheTimeout: settingsManager.get('viewerListCacheTimeout')
     };
 
     this.observers = new Set();
@@ -44,7 +33,7 @@ window.EnhancedDataManager = class DataManager {
     this.cleanupInterval = null;
 
     this.initCleanupInterval();
-    
+
     // Subscribe to API client events for background tracking updates
     if (this.apiClient) {
       this.apiClient.subscribe((event, data) => {
@@ -60,7 +49,7 @@ window.EnhancedDataManager = class DataManager {
     // Run cleanup every minute for more responsive timeout adjustments
     this.cleanupInterval = setInterval(() => {
       this.cleanup();
-    }, DataManager.CONSTANTS.CLEANUP_INTERVAL);
+    }, this.settingsManager.get('cleanupInterval'));
   }
 
   destroy() {
@@ -86,7 +75,7 @@ window.EnhancedDataManager = class DataManager {
     if (event === 'viewersUpdated' || event === 'userInfoUpdated' || event === 'dataCleared' || event === 'viewersSynced') {
       this.invalidateViewerListCache();
     }
-    
+
     this.observers.forEach(callback => {
       try {
         callback(event, data);
@@ -111,7 +100,7 @@ window.EnhancedDataManager = class DataManager {
   // Memory management and cleanup
   cleanup() {
     try {
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
       const now = Date.now();
 
       // Clean old history data
@@ -171,7 +160,7 @@ window.EnhancedDataManager = class DataManager {
             this.pendingUserInfo.delete(username);
           }
         });
-        
+
         console.log(`Memory cleanup: removed ${originalSize - targetSize} viewers (${originalSize} -> ${targetSize})`);
       } else if (this.state.viewers.size > config.maxViewerListSize) {
         // Fallback to config limit if memory-based limit isn't triggered
@@ -273,23 +262,23 @@ window.EnhancedDataManager = class DataManager {
     }
 
     const cleanUsername = username.trim().toLowerCase();
-    
+
     try {
       // Remove from viewers map
       const wasRemoved = this.state.viewers.delete(cleanUsername);
-      
+
       // Remove from pending user info
       this.pendingUserInfo.delete(cleanUsername);
-      
+
       if (wasRemoved) {
         this.state.metadata.lastUpdated = Date.now();
-        this.notify('viewersUpdated', { 
-          total: this.state.viewers.size, 
-          removed: [cleanUsername] 
+        this.notify('viewersUpdated', {
+          total: this.state.viewers.size,
+          removed: [cleanUsername]
         });
         return true;
       }
-      
+
       return false;
     } catch (error) {
       this.errorHandler?.handle(error, 'DataManager Remove Viewer', { username });
@@ -321,7 +310,7 @@ window.EnhancedDataManager = class DataManager {
     try {
       const oldViewerCount = this.state.viewers.size;
       let removedCount = 0;
-      
+
       if (removedUsernames && removedUsernames.length > 0) {
         // Delta update: only remove specific viewers (much more efficient)
         for (const username of removedUsernames) {
@@ -337,13 +326,13 @@ window.EnhancedDataManager = class DataManager {
         // Full sync fallback: clear and repopulate (expensive for large lists)
         console.log(`DataManager full sync: ${oldViewerCount} viewers (memory intensive)`);
         this.state.viewers.clear();
-        
+
         // Invalidate cache when data changes significantly
         this.invalidateViewerListCache();
-        
+
         for (const viewer of cleanedViewers) {
           const username = viewer.username.toLowerCase();
-          
+
           // Preserve ALL viewer data from background service
           const fullViewer = {
             ...viewer, // Keep all fields from background service
@@ -355,23 +344,23 @@ window.EnhancedDataManager = class DataManager {
               firstAttempt: null
             }
           };
-          
+
           this.state.viewers.set(username, fullViewer);
         }
         removedCount = oldViewerCount - this.state.viewers.size;
       }
-      
+
       const newViewerCount = this.state.viewers.size;
-      
+
       console.log(`DataManager sync complete: ${oldViewerCount} -> ${newViewerCount} viewers (${removedCount} removed)`);
-      
+
       // Notify observers of the sync
-      this.notify('viewersSynced', { 
-        oldCount: oldViewerCount, 
+      this.notify('viewersSynced', {
+        oldCount: oldViewerCount,
         newCount: newViewerCount,
-        removedCount 
+        removedCount
       });
-      
+
     } catch (error) {
       this.errorHandler?.handle(error, 'DataManager Sync With Background Data');
     }
@@ -382,13 +371,13 @@ window.EnhancedDataManager = class DataManager {
     try {
       // Don't clear existing viewers - update incrementally
       let newViewersCount = 0;
-      
+
       // Add/update viewers from background data
       if (data.viewers) {
         for (const viewer of data.viewers) {
           const username = viewer.username.toLowerCase();
           const existingViewer = this.state.viewers.get(username);
-          
+
           if (!existingViewer) {
             // Add new viewer with safety checks for metadata
             const safeViewer = this.createSafeViewer(viewer);
@@ -399,7 +388,7 @@ window.EnhancedDataManager = class DataManager {
             existingViewer.lastSeen = viewer.lastSeen;
             existingViewer.timeInStream = viewer.timeInStream || existingViewer.timeInStream;
             existingViewer.isAuthenticated = viewer.isAuthenticated || existingViewer.isAuthenticated;
-            
+
             // Update user info if available
             if (viewer.createdAt && !existingViewer.createdAt) {
               existingViewer.createdAt = viewer.createdAt;
@@ -475,14 +464,14 @@ window.EnhancedDataManager = class DataManager {
         if (userInfo.createdAt) {
           viewer.createdAt = userInfo.createdAt;
           viewer.id = userInfo.id;
-          
+
           // Store description and set hasDescription boolean
           viewer.description = userInfo.description || null;
           viewer.hasDescription = !!(userInfo.description && userInfo.description.trim().length > 0);
-          
+
           // Store profile image URL
           viewer.profileImageURL = userInfo.profileImageURL || null;
-          
+
           updated = true;
         } else {
           // Failed to get info
@@ -536,120 +525,53 @@ window.EnhancedDataManager = class DataManager {
     }
   }
 
+
+
   // Bot detection with improved algorithm
   detectBots() {
     try {
-      const stats = this.getStats();
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
       const startDate = new Date(config.botDateRangeStart);
       const endDate = new Date();
       endDate.setMonth(endDate.getMonth() - config.botDateRangeMonthsFromNow);
 
-      const monthlyCounts = new Map();
-      const dayCounts = new Map();
-      for (const viewer of this.state.viewers.values()) {
-        if (!viewer.createdAt) continue;
+      // Step 1: Build monthly and daily counts
+      const { monthlyCounts, dayCounts } = this.buildAccountCreationCounts(startDate, endDate);
 
-        const createdDate = new Date(viewer.createdAt);
+      // Step 2: Set same-day account counts for each viewer
+      this.setAccountsOnSameDay(dayCounts);
 
-        if (createdDate > endDate) 
-          continue;
+      // Step 3: Calculate baseline statistics
+      const baselineStats = this.calculateBaselineStats(monthlyCounts, startDate);
 
-        const monthKey = createdDate.toISOString().split('T')[0].slice(0, 7);
-        const dayKey = createdDate.toISOString().split('T')[0];
+      // Step 4: Detect bots with initial threshold (excluding top 5 months for more accurate baseline)
+      let maxExpectedAccounts = this.calculateMaxExpectedAccounts(
+        baselineStats.totalPostStartMonthsExcludingTopx,
+        baselineStats.totalPostStartAccountsExcludingTopx
+      );
 
-        monthlyCounts.set(monthKey, (monthlyCounts.get(monthKey) || 0) + 1);
-        dayCounts.set(dayKey, (dayCounts.get(dayKey) || 0) + 1);
+      let result = this.calculateBotCounts(monthlyCounts, startDate, maxExpectedAccounts);
+
+      // Step 5: Refine threshold if needed and recalculate
+      // Temp removed
+      /*      const refinedThreshold = this.calculateRefinedThreshold(result.totalNonBots);
+      
+            if (refinedThreshold < maxExpectedAccounts) {
+              maxExpectedAccounts = refinedThreshold;
+              result = this.calculateBotCounts(monthlyCounts, startDate, maxExpectedAccounts);
+            }
+      */
+      // Step 6: Apply minimum threshold (10% rule)
+      const stats = this.getStats();
+      if (this.shouldIgnoreBotDetection(result.totalBots, stats.accountsWithDates)) {
+        result = this.resetBotCounts(result.monthData);
       }
 
-      // Set each viewer's accountsOnSameDay count
-      for (const viewer of this.state.viewers.values()) {
-        if (!viewer.createdAt) {
-          viewer.accountsOnSameDay = 0;
-          continue;
-        }
-        const createdDate = new Date(viewer.createdAt);
-        const dayKey = createdDate.toISOString().split('T')[0];
-        viewer.accountsOnSameDay = dayCounts.get(dayKey) || 0;
-      }
-        
+      // Step 7: Store results in state
+      this.storeBotDetectionResults(result, maxExpectedAccounts, baselineStats.averagePreStartAccounts);
 
-      // Calculate the average accounts per month before startDate
-      let totalPreStartAccounts = 0;
-      let totalPreStartMonths = 0;
-      for (const [monthKey, count] of monthlyCounts.entries()) {
-        const monthDate = new Date(monthKey + '-01');
-        if (monthDate < startDate) {
-          totalPreStartAccounts += count;
-          totalPreStartMonths++;
-        }
-      }
-
-      const averagePreStartAccounts = totalPreStartMonths > 0
-        ? totalPreStartAccounts / totalPreStartMonths
-        : 0;
-
-      // Set max expected accounts post start date as 5x the average pre-start accounts
-      // Creators with mostly new viewers will have a low average pre-start, so allow a higher multiplier
-      const maxExpectedPostStartAccounts = Math.ceil(averagePreStartAccounts) * 5;
-
-      this.state.metadata.maxExpectedPostStartAccounts = Math.ceil(maxExpectedPostStartAccounts);
-      this.state.metadata.averagePreStartAccounts = Math.ceil(averagePreStartAccounts);
-
-
-      // Update bot status and same-day counts
-      let botsDetected = 0;
-      let accountsInBotRange = 0;      
-      const accountGraphMonthData = [];
-
-      // For every month after startDate
-      // Calculate how many are bots by subtracting the expected average from that month's count
-      for (const [monthKey, count] of monthlyCounts.entries()) {
-        const monthDate = new Date(monthKey + '-01');
-        if (monthDate >= startDate) {
-          let bots = Math.max(0, count - maxExpectedPostStartAccounts);
-          // If bots were found, recalculate with half the expected average
-          // A month flagged as botted will have more bots than just the excess over expected average
-          if (bots > 0) {
-            bots = Math.max(0, count - (maxExpectedPostStartAccounts / 2));
-          }
-          let nonBots = count - bots;
-
-          
-          accountGraphMonthData.push({
-            month: monthKey,
-            nonBots: Math.round(nonBots),
-            bots: Math.round(bots)
-          });
-          botsDetected += bots;
-          accountsInBotRange += count;
-        }
-      }
-
-
-
-      // Ignore botsDetected if under 5% of accounts with dates and set accountGraphMonthData accordingly
-      // This is to avoid false positives
-      if (this.state.metadata.authenticatedCount > 0) {
-        const botPercentage = (botsDetected / stats.accountsWithDates) * 100;
-        if (botPercentage < 5) {
-          botsDetected = 0;
-          // Reset bot counts in graph data
-          for (const monthData of accountGraphMonthData) {
-            monthData.nonBots += monthData.bots; // Add back to nonBots
-            monthData.bots = 0;
-          }
-        }
-      }
-
-
-      // Store botsDetected in state for UI access - round to integer
-      this.state.metadata.botsDetected = Math.round(botsDetected);
-      this.state.metadata.accountGraphMonthData = accountGraphMonthData;
-      this.state.metadata.accountsInBotRange = Math.round(accountsInBotRange);
-
-      if (botsDetected > 0) {
-        this.notify('botsDetected', botsDetected);
+      if (result.totalBots > 0) {
+        this.notify('botsDetected', Math.round(result.totalBots));
       }
 
     } catch (error) {
@@ -657,10 +579,175 @@ window.EnhancedDataManager = class DataManager {
     }
   }
 
+  // Helper: Build monthly and daily account creation counts
+  buildAccountCreationCounts(startDate, endDate) {
+    const monthlyCounts = new Map();
+    const dayCounts = new Map();
+
+    for (const viewer of this.state.viewers.values()) {
+      if (!viewer.createdAt) continue;
+
+      const createdDate = new Date(viewer.createdAt);
+      if (createdDate > endDate) continue;
+
+      const monthKey = createdDate.toISOString().split('T')[0].slice(0, 7); // YYYY-MM
+      const dayKey = createdDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      monthlyCounts.set(monthKey, (monthlyCounts.get(monthKey) || 0) + 1);
+      dayCounts.set(dayKey, (dayCounts.get(dayKey) || 0) + 1);
+    }
+
+    return { monthlyCounts, dayCounts };
+  }
+
+  // Helper: Set accountsOnSameDay for each viewer
+  setAccountsOnSameDay(dayCounts) {
+    for (const viewer of this.state.viewers.values()) {
+      if (!viewer.createdAt) {
+        viewer.accountsOnSameDay = 0;
+        continue;
+      }
+
+      const createdDate = new Date(viewer.createdAt);
+      const dayKey = createdDate.toISOString().split('T')[0];
+      viewer.accountsOnSameDay = dayCounts.get(dayKey) || 0;
+    }
+  }
+
+  // Helper: Calculate baseline statistics (pre and post start date)
+  calculateBaselineStats(monthlyCounts, startDate) {
+    let totalPreStartAccounts = 0;
+    let totalPreStartMonths = 0;
+    let totalPostStartAccounts = 0;
+    let totalPostStartMonths = 0;
+    const postStartMonths = [];
+
+    for (const [monthKey, count] of monthlyCounts.entries()) {
+      const monthDate = new Date(monthKey + '-01');
+
+      if (monthDate < startDate) {
+        totalPreStartAccounts += count;
+        totalPreStartMonths++;
+      } else {
+        totalPostStartAccounts += count;
+        totalPostStartMonths++;
+        postStartMonths.push({ monthKey, count });
+      }
+    }
+
+    const averagePreStartAccounts = totalPreStartMonths > 0
+      ? totalPreStartAccounts / totalPreStartMonths
+      : 0;
+
+    // Calculate total excluding top 5 months (for more accurate baseline)
+    let totalPostStartAccountsExcludingTopx = totalPostStartAccounts;
+    let monthsToIgnore = totalPostStartMonths < 20 ? 5 : 10; // Ignore more months if more data available
+    if (postStartMonths.length > monthsToIgnore) {
+      // Sort months by count (descending) and exclude top 5
+      const sortedMonths = [...postStartMonths].sort((a, b) => b.count - a.count);
+      const topxTotal = sortedMonths.slice(0, monthsToIgnore).reduce((sum, m) => sum + m.count, 0);
+      totalPostStartAccountsExcludingTopx = totalPostStartAccounts - topxTotal;
+    } else {
+      // If we have 5 or fewer months, use all of them (no exclusion)
+      totalPostStartAccountsExcludingTopx = totalPostStartAccounts;
+    }
+
+    return {
+      totalPreStartAccounts,
+      totalPreStartMonths,
+      totalPostStartAccounts,
+      totalPostStartMonths,
+      totalPostStartAccountsExcludingTopx,
+      totalPostStartMonthsExcludingTopx: Math.max(0, totalPostStartMonths - monthsToIgnore),
+      averagePreStartAccounts
+    };
+  }
+
+  // Helper: Calculate maximum expected accounts per month
+  calculateMaxExpectedAccounts(totalPostStartMonthsExcludingTopx, totalPostStartExcludingTopx) {
+    let maxExpected = Math.ceil((totalPostStartExcludingTopx / totalPostStartMonthsExcludingTopx) * 5);
+    return Math.max(maxExpected, 5); // Minimum of 5
+  }
+
+  // Helper: Calculate refined threshold based on non-bot accounts
+  calculateRefinedThreshold(totalNonBots) {
+    let refined = Math.ceil(totalNonBots / 5);
+    return Math.max(refined, 5); // Minimum of 5
+  }
+
+  // Helper: Calculate bot counts for each month
+  calculateBotCounts(monthlyCounts, startDate, maxExpectedAccounts) {
+    let totalBots = 0;
+    let totalAccounts = 0;
+    let totalNonBots = 0;
+    const monthData = [];
+
+    for (const [monthKey, count] of monthlyCounts.entries()) {
+      const monthDate = new Date(monthKey + '-01');
+
+      if (monthDate < startDate) continue;
+
+      // Calculate bots for this month
+      let bots = Math.max(0, count - maxExpectedAccounts);
+
+      // If bots detected, use stricter threshold (half expected)
+      if (bots > 0) {
+        bots = Math.max(0, count - (maxExpectedAccounts / 3));
+      }
+
+      const nonBots = count - bots;
+
+      monthData.push({
+        month: monthKey,
+        nonBots: Math.round(nonBots),
+        bots: Math.round(bots)
+      });
+
+      totalBots += bots;
+      totalAccounts += count;
+      totalNonBots += nonBots;
+    }
+
+    return { totalBots, totalAccounts, totalNonBots, monthData };
+  }
+
+  // Helper: Check if bot detection should be ignored (< 10% threshold)
+  shouldIgnoreBotDetection(botsDetected, accountsWithDates) {
+    if (accountsWithDates === 0) return true;
+
+    const botPercentage = (botsDetected / accountsWithDates) * 100;
+    return botPercentage < 10;
+  }
+
+  // Helper: Reset bot counts (when below threshold)
+  resetBotCounts(monthData) {
+    const resetMonthData = monthData.map(month => ({
+      ...month,
+      nonBots: month.nonBots + month.bots,
+      bots: 0
+    }));
+
+    return {
+      totalBots: 0,
+      totalAccounts: monthData.reduce((sum, m) => sum + m.nonBots + m.bots, 0),
+      totalNonBots: monthData.reduce((sum, m) => sum + m.nonBots + m.bots, 0),
+      monthData: resetMonthData
+    };
+  }
+
+  // Helper: Store bot detection results in state
+  storeBotDetectionResults(result, maxExpected, averagePreStart) {
+    this.state.metadata.botsDetected = Math.round(result.totalBots);
+    this.state.metadata.accountGraphMonthData = result.monthData;
+    this.state.metadata.accountsInBotRange = Math.round(result.totalAccounts);
+    this.state.metadata.maxExpectedPostStartAccounts = Math.ceil(maxExpected);
+    this.state.metadata.averagePreStartAccounts = Math.ceil(averagePreStart);
+  }
+
   // History management
   addHistoryPoint(totalViewers, authenticatedNonBots, bots, totalAuthenticated = 0) {
     try {
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
       const now = Date.now();
 
       this.state.history.push({
@@ -710,7 +797,7 @@ window.EnhancedDataManager = class DataManager {
   }
 
   getEffectiveTimeoutDuration() {
-    const config = this.configManager.get();
+    const config = this.settingsManager.get();
     if (!config.autoAdjustTimeout) {
       return config.timeoutDuration;
     }
@@ -719,13 +806,13 @@ window.EnhancedDataManager = class DataManager {
     const latest = this.state.history[this.state.history.length - 1];
     const totalAuthenticatedCount = latest?.totalAuthenticated || 0;
 
-    const calculatedTimeout = this.configManager.calculateAutoTimeout(totalAuthenticatedCount);
+    const calculatedTimeout = this.settingsManager.calculateAutoTimeout(totalAuthenticatedCount);
 
     return calculatedTimeout;
   }
 
   getEffectiveRequestInterval() {
-    const config = this.configManager.get();
+    const config = this.settingsManager.get();
     if (!config.autoAdjustRequestInterval) {
       return config.requestInterval;
     }
@@ -734,7 +821,7 @@ window.EnhancedDataManager = class DataManager {
     const latest = this.state.history[this.state.history.length - 1];
     const totalAuthenticatedCount = latest?.totalAuthenticated || 0;
 
-    const calculatedInterval = this.configManager.calculateAutoRequestInterval(totalAuthenticatedCount);
+    const calculatedInterval = this.settingsManager.calculateAutoRequestInterval(totalAuthenticatedCount);
 
     return calculatedInterval;
   }
@@ -745,10 +832,10 @@ window.EnhancedDataManager = class DataManager {
       const viewers = Array.from(this.state.viewers.values());
       const authenticatedNonBots = this.state.metadata.authenticatedCount - (this.state.metadata.botsDetected || 0);
       const bots = this.state.metadata.botsDetected || 0;
-      
+
       // Get pending count based on tracking mode
-      const pendingInfo = this.apiClient?.isBackgroundTracking ? 
-        (this.apiClient._pendingCount || 0) : 
+      const pendingInfo = this.apiClient?.isBackgroundTracking ?
+        (this.apiClient._pendingCount || 0) :
         this.pendingUserInfo.size;
 
       return {
@@ -867,16 +954,16 @@ window.EnhancedDataManager = class DataManager {
 
   getViewerList(page = 1, pageSize = 50, searchTerm = '', sortBy = 'timeInStream', dateFilter = 'all') {
     try {
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
       pageSize = Math.min(pageSize, config.pageSize * 2); // Limit page size
 
       // Check cache first for performance with large datasets
       const currentTime = Date.now();
       const cacheKey = `${page}-${pageSize}-${searchTerm}-${sortBy}-${dateFilter}`;
-      
-      if (this.viewerListCache.cachedResult && 
-          this.viewerListCache.lastParams === cacheKey &&
-          currentTime - this.viewerListCache.lastCacheTime < this.viewerListCache.cacheTimeout) {
+
+      if (this.viewerListCache.cachedResult &&
+        this.viewerListCache.lastParams === cacheKey &&
+        currentTime - this.viewerListCache.lastCacheTime < this.viewerListCache.cacheTimeout) {
         return this.viewerListCache.cachedResult;
       }
 
@@ -893,11 +980,11 @@ window.EnhancedDataManager = class DataManager {
         const [filterYear, filterMonth] = dateFilter.split('-').map(Number);
         viewers = viewers.filter(viewer => {
           if (!viewer.createdAt) return false;
-          
+
           const createdDate = new Date(viewer.createdAt);
           const createdYear = createdDate.getFullYear();
           const createdMonth = createdDate.getMonth() + 1; // getMonth() returns 0-11, we want 1-12
-          
+
           return createdYear === filterYear && createdMonth === filterMonth;
         });
       }
@@ -933,7 +1020,7 @@ window.EnhancedDataManager = class DataManager {
       this.scheduleIdleProcessing((viewerList, deadline) => {
         for (const viewer of viewerList) {
           if (deadline.timeRemaining() <= 1) break; // Stop if running out of idle time
-          
+
           if (viewer.createdAt && !viewer._formattedCreatedDate) {
             const date = new Date(viewer.createdAt);
             const day = date.getDate();
@@ -958,12 +1045,12 @@ window.EnhancedDataManager = class DataManager {
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       };
-      
+
       // Cache the result for performance
       this.viewerListCache.cachedResult = result;
       this.viewerListCache.lastParams = cacheKey;
       this.viewerListCache.lastCacheTime = currentTime;
-      
+
       return result;
     } catch (error) {
       this.errorHandler?.handle(error, 'DataManager Get Viewer List',
@@ -997,7 +1084,7 @@ window.EnhancedDataManager = class DataManager {
 
   getCreationDateHistogram() {
     try {
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
       const startDate = new Date(config.botDateRangeStart);
       const endDate = new Date();
       endDate.setMonth(endDate.getMonth() - config.botDateRangeMonthsFromNow);
@@ -1027,7 +1114,7 @@ window.EnhancedDataManager = class DataManager {
 
   removeTimedOutViewers() {
     try {
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
       const now = Date.now();
       const effectiveTimeout = this.getEffectiveTimeoutDuration();
       const cutoff = now - effectiveTimeout;
@@ -1147,12 +1234,12 @@ window.EnhancedDataManager = class DataManager {
     }
 
     const descriptionStats = this.getDescriptionStats();
-    
+
     // Get pending count based on tracking mode
-    const pendingCount = this.apiClient?.isBackgroundTracking ? 
-      (this.apiClient._pendingCount || 0) : 
+    const pendingCount = this.apiClient?.isBackgroundTracking ?
+      (this.apiClient._pendingCount || 0) :
       this.pendingUserInfo.size;
-    
+
     return {
       viewerCount: this.state.viewers.size,
       historyPoints: this.state.history.length,
@@ -1208,7 +1295,7 @@ window.EnhancedDataManager = class DataManager {
   }
 
   getUsersWithoutDescriptions() {
-    return Array.from(this.state.viewers.values()).filter(viewer => 
+    return Array.from(this.state.viewers.values()).filter(viewer =>
       viewer.createdAt && !viewer.hasDescription);
   }
 
@@ -1216,42 +1303,42 @@ window.EnhancedDataManager = class DataManager {
     const allUsers = Array.from(this.state.viewers.values());
     const usersWithData = allUsers.filter(viewer => viewer.createdAt);
     const usersWithDescriptions = allUsers.filter(viewer => viewer.hasDescription);
-    
+
     return {
       total: allUsers.length,
       withData: usersWithData.length,
       withDescriptions: usersWithDescriptions.length,
       withoutDescriptions: usersWithData.length - usersWithDescriptions.length,
-      descriptionPercentage: usersWithData.length > 0 ? 
+      descriptionPercentage: usersWithData.length > 0 ?
         Math.round((usersWithDescriptions.length / usersWithData.length) * 100) : 0
     };
   }
 
   getAvailableAccountCreationMonths() {
     try {
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
       const startDate = new Date(config.botDateRangeStart);
       const endDate = new Date();
       endDate.setMonth(endDate.getMonth() - config.botDateRangeMonthsFromNow);
-      
+
       const monthsMap = new Map();
-      
+
       // Get all viewers and count by month
       const viewers = Array.from(this.state.viewers.values());
-      
+
       viewers.forEach(viewer => {
         if (!viewer.createdAt) return;
-        
+
         const createdDate = new Date(viewer.createdAt);
-        
+
         // Check if date is within the bot detection range
         if (createdDate < startDate || createdDate > endDate) return;
-        
+
         const year = createdDate.getFullYear();
         const month = createdDate.getMonth() + 1;
         const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
         const monthLabel = createdDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-        
+
         if (!monthsMap.has(monthKey)) {
           monthsMap.set(monthKey, {
             value: monthKey,
@@ -1260,14 +1347,14 @@ window.EnhancedDataManager = class DataManager {
             date: new Date(year, month - 1, 1) // For sorting
           });
         }
-        
+
         monthsMap.get(monthKey).count++;
       });
-      
+
       // Convert to array and sort by date (newest first)
       const monthsArray = Array.from(monthsMap.values());
       monthsArray.sort((a, b) => b.date - a.date);
-      
+
       return monthsArray;
     } catch (error) {
       console.error('Error getting available months:', error);

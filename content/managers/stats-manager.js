@@ -1,8 +1,8 @@
-// Stats Manager for handling statistics display and calculations
+// Stats Manager for handling statistics display and updates
 window.StatsManager = class StatsManager {
-  constructor(dataManager, configManager, errorHandler, apiClient = null) {
+  constructor(dataManager, settingsManager, errorHandler, apiClient) {
     this.dataManager = dataManager;
-    this.configManager = configManager;
+    this.settingsManager = settingsManager;
     this.errorHandler = errorHandler;
     this.apiClient = apiClient;
   }
@@ -11,7 +11,7 @@ window.StatsManager = class StatsManager {
     try {
       const stats = this.dataManager.getStats();
 
-      if (this.dataManager.isShowingLive()) {        
+      if (this.dataManager.isShowingLive()) {
         const history = this.dataManager.getHistory();
         const latestTotal = history.length > 0 ? history[history.length - 1].totalViewers : 0;
 
@@ -29,7 +29,7 @@ window.StatsManager = class StatsManager {
           ? this.formatPercentage((authenticatedNonBots / latestTotal) * 100)
           : 0;
 
-        const botPercentage = stats.accountsWithDates > 0 
+        const botPercentage = stats.accountsWithDates > 0
           ? this.formatPercentage((stats.bots / stats.accountsWithDates) * 100)
           : 0;
 
@@ -39,17 +39,17 @@ window.StatsManager = class StatsManager {
         const botStyle = this.getBotPercentageStyle(botPercentage);
 
         // Update elements
-        const totalViewersDisplay = stats.bots > 0 
+        const totalViewersDisplay = stats.bots > 0
           ? `${latestTotal} / ${fixedAuthenticatedCount || 0} (<span style="color: ${percentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${percentageColor} !important; background: none !important;">${fixedAuthenticatedPercentage}%</span>) / ${Math.max(0, authenticatedNonBots)} (<span style="color: ${nonBotPercentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${nonBotPercentageColor} !important; background: none !important;">${authenticatedNonBotsPercentage}%</span>)`
           : `${latestTotal} / ${fixedAuthenticatedCount || 0} (<span style="color: ${percentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${percentageColor} !important; background: none !important;">${fixedAuthenticatedPercentage}%</span>)`;
 
         this.updateElement('tvm-total-viewers', totalViewersDisplay);
-        
+
         // Show total users found in our viewer list (not the API's authenticated count)
         this.updateElement('tvm-authenticated', stats.totalUsersFound.toString());
-        
-        this.updateElement('tvm-bots', 
-          botStyle 
+
+        this.updateElement('tvm-bots',
+          botStyle
             ? `${stats.bots} / ${stats.accountsWithDates} (<span style="${botStyle}">${botPercentage}%</span>)`
             : `${stats.bots} / ${stats.accountsWithDates} (${botPercentage}%)`
         );
@@ -88,15 +88,15 @@ window.StatsManager = class StatsManager {
             : `${latestTotal} / ${fixedAuthenticatedCount || 0} (<span style="color: ${percentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${percentageColor} !important; background: none !important;">${fixedAuthenticatedPercentage}%</span>)`;
 
           this.updateElement('tvm-total-viewers', totalViewersDisplay);
-          
+
           // Show total users found in our viewer list (not the API's authenticated count)
           this.updateElement('tvm-authenticated', historyPoint.usersFound.toString());
-          
-          this.updateElement('tvm-bots', 
-            botStyle 
+
+          this.updateElement('tvm-bots',
+            botStyle
               ? `${historyPoint.bots} / ${historyPoint.accountsWithDates} (<span style="${botStyle}">${botPercentage}%</span>)`
               : `${historyPoint.bots} / ${historyPoint.accountsWithDates} (${botPercentage}%)`
-          );                
+          );
         } else {
           // No history point, clear stats
           this.updateElement('tvm-total-viewers', 'No data');
@@ -107,10 +107,10 @@ window.StatsManager = class StatsManager {
       }
       // Update pending info
       this.updateElement('tvm-pending', stats.pendingInfo.toString());
-      
+
       // Update API calls display
       this.updateApiCallsDisplay();
-      
+
       // Update effective displays  
       this.updateEffectiveTimeoutDisplay();
       this.updateEffectiveRequestIntervalDisplay();
@@ -124,7 +124,7 @@ window.StatsManager = class StatsManager {
     try {
       // Update viewer count display
       this.updateElement('tvm-total-viewers', count.toString());
-      
+
       if (authenticatedCount !== null) {
         this.updateElement('tvm-authenticated', authenticatedCount.toString());
       }
@@ -177,10 +177,10 @@ window.StatsManager = class StatsManager {
 
   updateEffectiveTimeoutDisplay() {
     try {
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
       const effectiveTimeoutDisplay = document.getElementById('tvm-effective-timeout');
       const effectiveTimeoutValue = document.getElementById('tvm-effective-timeout-value');
-      
+
       if (!effectiveTimeoutDisplay || !effectiveTimeoutValue) return;
 
       if (config.autoAdjustTimeout) {
@@ -203,10 +203,10 @@ window.StatsManager = class StatsManager {
 
   updateEffectiveRequestIntervalDisplay() {
     try {
-      const config = this.configManager.get();
+      const config = this.settingsManager.get();
       const effectiveRequestIntervalDisplay = document.getElementById('tvm-effective-request-interval');
       const effectiveRequestIntervalValue = document.getElementById('tvm-effective-request-interval-value');
-      
+
       if (!effectiveRequestIntervalDisplay || !effectiveRequestIntervalValue) return;
 
       if (config.autoAdjustRequestInterval) {

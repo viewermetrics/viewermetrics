@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Viewer Metrics",
-  "version": "0.9.51",
+  "version": "0.9.6",
   "description": "Track and analyze stream viewers with bot detection",
   "permissions": [
     "storage",
@@ -24,7 +24,7 @@
         "*://*.twitch.tv/*"
       ],
       "js": [
-        "content/core/config-manager.js",
+        "content/core/settings-manager.js",
         "content/core/error-handler.js",
         "content/ui/html-templates.js",
         "content/core/content.js"

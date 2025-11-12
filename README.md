@@ -7,7 +7,7 @@ A Chrome extension that tracks and analyzes stream viewers with bot detection ca
 
 ## 🚀 Installation
 
-1. Download the [latest release](https://github.com/viewermetrics/viewermetrics/releases/tag/v0.9.51) or clone this repository
+1. Download the [latest release](https://github.com/viewermetrics/viewermetrics/releases/tag/v0.9.6) or clone this repository
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" (toggle in top right)
 4. Click "Load unpacked" and select the project folder
@@ -60,7 +60,7 @@ These headers are used to authenticate the extension's own API requests.
 - **Baseline Establishment**: Calculates the maximum expected accounts per month post 2021
 - **Spike Detection**: Identifies months where account creation significantly exceeds the baseline
 - **Automatic Classification**: Accounts created during spike periods are flagged as potential bots, ignoring half the baseline as real users
-- **False Positive Removal**: Only a final bot percentage above 5% is shown
+- **False Positive Removal**: Only a final bot percentage above 10% is shown
 
 ## Data Storage
 

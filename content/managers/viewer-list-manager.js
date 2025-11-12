@@ -1,8 +1,8 @@
-// Viewer List Manager for handling viewer list display and filtering
+// Viewer List Manager for handling viewer list display and pagination
 window.ViewerListManager = class ViewerListManager {
-  constructor(dataManager, configManager, errorHandler, tabManager) {
+  constructor(dataManager, settingsManager, errorHandler, tabManager) {
     this.dataManager = dataManager;
-    this.configManager = configManager;
+    this.settingsManager = settingsManager;
     this.errorHandler = errorHandler;
     this.tabManager = tabManager;
     this.currentPage = 1;
@@ -15,8 +15,8 @@ window.ViewerListManager = class ViewerListManager {
   scheduleViewerListUpdate() {
     try {
       const now = Date.now();
-      const viewerListUpdateInterval = 15000; // Update viewer list every 15 seconds (reduced frequency for better performance)
-      
+      const viewerListUpdateInterval = this.settingsManager.get('viewerListUpdateInterval');
+
       // Only update if enough time has passed since last update
       if (now - this.lastViewerListUpdate >= viewerListUpdateInterval) {
         this.updateViewerList();
@@ -49,14 +49,14 @@ window.ViewerListManager = class ViewerListManager {
       const searchTerm = document.getElementById('tvm-search')?.value || '';
       const sortBy = document.getElementById('tvm-sort')?.value || 'timeInStream';
       const dateFilter = document.getElementById('tvm-date-filter')?.value || 'all';
-      
-      const config = this.configManager.get();
+
+      const config = this.settingsManager.get();
       const result = this.dataManager.getViewerList(this.currentPage, config.pageSize, searchTerm, sortBy, dateFilter);
-      
+
       const listContent = document.getElementById('tvm-list-content');
       const pagination = document.getElementById('tvm-pagination');
       const paginationTop = document.getElementById('tvm-pagination-top');
-      
+
       if (!listContent || !pagination || !paginationTop) return;
 
       if (result.viewers.length === 0) {
@@ -82,17 +82,17 @@ window.ViewerListManager = class ViewerListManager {
     const fragment = document.createDocumentFragment();
     const table = document.createElement('table');
     table.className = 'tvm-table';
-    
+
     // Create header
     const thead = document.createElement('thead');
     thead.innerHTML = '<tr><th style="width: 200px;">Username</th><th style="width: 120px; text-align: right;">Created</th><th style="width: 100px; text-align: right;">Time</th><th style="width: 60px; text-align: right; padding: 12px 8px;">Count</th><th style="width: auto; max-width: 300px;">Bio</th></tr>';
     table.appendChild(thead);
-    
+
     const tbody = document.createElement('tbody');
-    
+
     // Batch DOM operations for better performance
     const rowsFragment = document.createDocumentFragment();
-    
+
     for (const viewer of viewers) {
       const timeStr = FormatUtils.formatDuration(viewer.timeInStream);
       const pendingIcon = viewer.hasPendingInfo ? '⏳' : '';
@@ -100,7 +100,7 @@ window.ViewerListManager = class ViewerListManager {
 
       // Capitalize first letter of username
       const capitalizedUsername = viewer.username.charAt(0).toUpperCase() + viewer.username.slice(1);
-      
+
       // Format created date to "23 Mar 2023" format (cached date formatting)
       let createdDate = '-';
       if (viewer.createdAt) {
@@ -114,13 +114,13 @@ window.ViewerListManager = class ViewerListManager {
         }
         createdDate = viewer._formattedCreatedDate;
       }
-      
+
       // Account count for separate column
       const accountCount = viewer.accountsOnSameDay > 0 ? viewer.accountsOnSameDay : '';
-      
+
       // Avatar image
       const avatarUrl = viewer.profileImageURL || 'https://static-cdn.jtvnw.net/user-default-pictures-uv/41780b5a-def8-11e9-94d9-784f43822e80-profile_image-300x300.png';
-      
+
       // Bio text (let CSS handle truncation)
       const bioText = viewer.description || '';
 
@@ -137,14 +137,14 @@ window.ViewerListManager = class ViewerListManager {
           <td style="text-align: right; font-size: 12px; color: #999; padding: 2px 8px; vertical-align: middle;">${accountCount}</td>
           <td style="max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; vertical-align: middle; font-size: 12px; color: #adadb8;" title="${bioText}">${bioText}</td>
       `;
-      
+
       rowsFragment.appendChild(row);
     }
-    
+
     tbody.appendChild(rowsFragment);
     table.appendChild(tbody);
     fragment.appendChild(table);
-    
+
     // Convert to HTML string for compatibility with existing code
     const tempDiv = document.createElement('div');
     tempDiv.appendChild(fragment);
@@ -158,17 +158,17 @@ window.ViewerListManager = class ViewerListManager {
       const pageInfo = document.getElementById('tvm-page-info');
       const prevBtn = document.getElementById('tvm-prev');
       const nextBtn = document.getElementById('tvm-next');
-      
+
       if (pageInfo) pageInfo.textContent = `Page ${result.currentPage} of ${result.totalPages} (${result.totalUsersFound} viewers)`;
       if (prevBtn) prevBtn.disabled = !result.hasPrevPage;
       if (nextBtn) nextBtn.disabled = !result.hasNextPage;
-      
+
       // Update top pagination
       paginationTop.style.display = 'flex';
       const pageInfoTop = document.getElementById('tvm-page-info-top');
       const prevBtnTop = document.getElementById('tvm-prev-top');
       const nextBtnTop = document.getElementById('tvm-next-top');
-      
+
       if (pageInfoTop) pageInfoTop.textContent = `Page ${result.currentPage} of ${result.totalPages} (${result.totalUsersFound} viewers)`;
       if (prevBtnTop) prevBtnTop.disabled = !result.hasPrevPage;
       if (nextBtnTop) nextBtnTop.disabled = !result.hasNextPage;
@@ -225,13 +225,13 @@ window.ViewerListManager = class ViewerListManager {
 
       // Preserve current selection
       const currentValue = dateFilterSelect.value || 'all';
-      
+
       // Clear existing options
       dateFilterSelect.innerHTML = '<option value="all">All Dates</option>';
-      
+
       // Get available months from data manager
       const availableMonths = this.dataManager.getAvailableAccountCreationMonths();
-      
+
       // Add monthly options for available data
       availableMonths.forEach(monthData => {
         const option = document.createElement('option');
@@ -265,7 +265,7 @@ window.ViewerListManager = class ViewerListManager {
 
       dateFilterSelect.value = yearMonth;
       this.onDateFilterChange();
-      
+
       // Switch to viewers tab when creation graph is clicked
       this.tabManager.switchTab('viewers');
     } catch (error) {

@@ -1,8 +1,8 @@
 // Main Chart component for viewer statistics
 window.MainChart = class MainChart {
-  constructor(dataManager, configManager, errorHandler, channelName = null) {
+  constructor(dataManager, settingsManager, errorHandler, channelName = null) {
     this.dataManager = dataManager;
-    this.configManager = configManager;
+    this.settingsManager = settingsManager;
     this.errorHandler = errorHandler;
     this.channelName = channelName;
     this.chart = null;
@@ -31,7 +31,7 @@ window.MainChart = class MainChart {
       throw new Error('Main chart canvas not found');
     }
 
-    const config = this.configManager.get();
+    const config = this.settingsManager.get();
     const colors = config.chartColors;
 
     this.chart = new Chart(ctx, {
@@ -111,8 +111,8 @@ window.MainChart = class MainChart {
   }
 
   getOptions() {
-    const config = this.configManager.get();
-    
+    const config = this.settingsManager.get();
+
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -128,16 +128,16 @@ window.MainChart = class MainChart {
           const element = elements[0];
           const datasetIndex = element.datasetIndex;
           const pointIndex = element.index;
-          
+
           // Get the data point that was clicked
           const dataset = this.chart.data.datasets[datasetIndex];
           const dataPoint = dataset.data[pointIndex];
-          
+
           if (dataPoint && dataPoint.x) {
             // Find the history point that corresponds to this timestamp
             const history = this.dataManager.getHistory();
             const historyPoint = history.find(h => h.timestamp === dataPoint.x);
-            
+
             if (historyPoint) {
               this.dataManager.setHistoryPoint(historyPoint);
             }
@@ -163,7 +163,7 @@ window.MainChart = class MainChart {
             color: '#adadb8',
             font: { size: 11 },
             maxTicksLimit: 8,
-            callback: function(value, index, values) {
+            callback: function (value, index, values) {
               // Format ticks to show UTC time
               const date = new Date(value);
               return date.toLocaleTimeString('en-US', {
@@ -174,7 +174,7 @@ window.MainChart = class MainChart {
               });
             }
           },
-          
+
           grid: {
             color: 'rgba(173, 173, 184, 0.1)',
             drawBorder: false
@@ -191,7 +191,7 @@ window.MainChart = class MainChart {
           ticks: {
             color: '#adadb8',
             font: { size: 11 },
-            callback: function(value) {
+            callback: function (value) {
               if (value >= 1000000) {
                 return (value / 1000000).toFixed(1) + 'M';
               } else if (value >= 1000) {
@@ -232,7 +232,7 @@ window.MainChart = class MainChart {
           titleFont: { size: 13, weight: '600' },
           bodyFont: { size: 12 },
           callbacks: {
-            title: function(context) {
+            title: function (context) {
               const date = new Date(context[0].parsed.x);
               return date.toLocaleTimeString([], {
                 hour: '2-digit',
@@ -257,8 +257,8 @@ window.MainChart = class MainChart {
 
   generateLegendLabels(chart) {
     const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-    const colors = this.configManager.get().chartColors;
-    
+    const colors = this.settingsManager.get().chartColors;
+
     return labels.map(label => {
       if (label.text === 'Viewers') {
         label.pointStyle = 'line';
@@ -287,15 +287,15 @@ window.MainChart = class MainChart {
     if (!this.chart) return;
 
     const history = this.dataManager.getHistory();
-    
+
     const totalViewersData = history.map(h => ({ x: h.timestamp, y: h.totalViewers }));
     const authenticatedNonBotsData = history.map(h => ({
       x: h.timestamp,
       y: h.authenticatedNonBots || 0
     }));
     const botsData = history.map(h => ({ x: h.timestamp, y: h.bots || 0 }));
-    const totalAuthenticatedData = history.map(h => ({ 
-      x: h.timestamp, 
+    const totalAuthenticatedData = history.map(h => ({
+      x: h.timestamp,
       y: h.totalAuthenticated || 0
     }));
 
@@ -309,7 +309,7 @@ window.MainChart = class MainChart {
 
     // Auto-hide datasets that contain only zeros using Chart.js API
     const chart = this.chart;
-    
+
     // Hide/show bots dataset (index 2)
     if (!hasNonZeroBots && chart.isDatasetVisible(2)) {
       chart.hide(2);
@@ -318,7 +318,7 @@ window.MainChart = class MainChart {
       chart.show(2);
       chart.show(3);
     }
-    
+
     // Calculate max value and set y-axis max to 1.2x the highest value
     if (history.length > 0) {
       const maxValue = Math.max(
@@ -329,7 +329,7 @@ window.MainChart = class MainChart {
           h.totalAuthenticated || 0
         ))
       );
-      
+
       if (maxValue > 0) {
         this.chart.options.scales.y.max = Math.ceil(maxValue * 1.2);
       } else {

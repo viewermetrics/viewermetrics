@@ -1,25 +1,26 @@
 // UI Manager for coordinating UI operations (Refactored to use specialized managers)
 window.UIManager = class UIManager {
-  constructor(dataManager, configManager, errorHandler, apiClient) {
+  constructor(dataManager, settingsManager, errorHandler, apiClient) {
     this.dataManager = dataManager;
-    this.configManager = configManager;
+    this.settingsManager = settingsManager;
     this.errorHandler = errorHandler;
     this.apiClient = apiClient;
     this.uiContainer = null;
     this.isInitialized = false;
     this.channelName = null;
-    
+    this.usernameClickHandler = null; // Store handler for cleanup
+
     // Initialize specialized managers
-    this.statsManager = new StatsManager(dataManager, configManager, errorHandler, apiClient);
-    this.viewerListManager = new ViewerListManager(dataManager, configManager, errorHandler, null); // tabManager set later
+    this.statsManager = new StatsManager(dataManager, settingsManager, errorHandler, apiClient);
+    this.viewerListManager = new ViewerListManager(dataManager, settingsManager, errorHandler, null); // tabManager set later
     this.tabManager = new TabManager(errorHandler);
     this.popupManager = new PopupManager(dataManager, apiClient, errorHandler);
-    this.settingsUIManager = new SettingsUIManager(configManager, dataManager, apiClient, errorHandler, this.statsManager);
-    this.debugManager = new DebugManager(dataManager, configManager, errorHandler);
-    
+    this.settingsUI = new SettingsUI(settingsManager, this.statsManager, apiClient, errorHandler);
+    this.debugManager = new DebugManager(dataManager, settingsManager, errorHandler);
+
     // Set tabManager reference for viewerListManager
     this.viewerListManager.tabManager = this.tabManager;
-    
+
     // Subscribe to data changes
     this.dataManager.subscribe((event, data) => {
       this.handleDataChange(event, data);
@@ -66,10 +67,10 @@ window.UIManager = class UIManager {
       // Store channel name for later use
       this.channelName = channelName;
       this.popupManager.setChannelName(channelName);
-      
+
       // UI is already in static HTML, just reference the container
       this.uiContainer = targetElement.querySelector('.tvm-container');
-      
+
       // Update stream name in static HTML
       const streamNameElement = this.uiContainer?.querySelector('.tvm-stream-name');
       if (streamNameElement) {
@@ -78,27 +79,33 @@ window.UIManager = class UIManager {
 
       // Setup event listeners
       this.setupEventListeners();
-            
-      
-      // Load current settings using SettingsUIManager
-      await this.settingsUIManager.loadSettings();
-      
+
+
+      // Load current settings using SettingsUI
+      await this.settingsUI.loadForm();
+
       // Initialize viewer list update timestamp
       this.viewerListManager.lastViewerListUpdate = Date.now();
-      
+
       // Update debug info since it's always visible
       this.debugManager.updateDebugInfo();
-      
+
       // Note: Channel avatar will be fetched after tracking starts successfully
-      
+
       this.isInitialized = true;
-      
+
     } catch (error) {
       this.errorHandler?.handle(error, 'UIManager Inject UI', { channelName });
     }
   }
 
   removeUI() {
+    // Clean up username click handler
+    if (this.usernameClickHandler) {
+      document.removeEventListener('click', this.usernameClickHandler);
+      this.usernameClickHandler = null;
+    }
+
     if (this.uiContainer) {
       // Reset reference to static HTML
       this.uiContainer = null;
@@ -128,11 +135,11 @@ window.UIManager = class UIManager {
       if (elements.search) {
         elements.search.addEventListener('input', () => this.viewerListManager.onSearchInput());
       }
-      
+
       if (elements.sort) {
         elements.sort.addEventListener('change', () => this.viewerListManager.onSortChange());
       }
-      
+
       if (elements.dateFilter) {
         elements.dateFilter.addEventListener('change', () => this.viewerListManager.onDateFilterChange());
       }
@@ -141,23 +148,21 @@ window.UIManager = class UIManager {
       if (elements.prevBtn) {
         elements.prevBtn.addEventListener('click', () => this.viewerListManager.changePage(-1));
       }
-      
+
       if (elements.nextBtn) {
         elements.nextBtn.addEventListener('click', () => this.viewerListManager.changePage(1));
       }
-      
+
       if (elements.prevBtnTop) {
         elements.prevBtnTop.addEventListener('click', () => this.viewerListManager.changePage(-1));
       }
-      
+
       if (elements.nextBtnTop) {
         elements.nextBtnTop.addEventListener('click', () => this.viewerListManager.changePage(1));
       }
 
-      // Main control buttons - delegate to SettingsUIManager
-      if (elements.pauseResume) {
-        elements.pauseResume.addEventListener('click', () => this.settingsUIManager.onPauseResumeClick());
-      }
+      // Main control buttons - removed onPauseResumeClick as it's not needed
+      // The pause/resume functionality should be handled elsewhere
 
       // Page size change
       if (elements.pageSize) {
@@ -170,21 +175,30 @@ window.UIManager = class UIManager {
         historyModeBtn.addEventListener('click', () => this.onHistoryModeButtonClick());
       }
 
-            // Username click handlers - Use event delegation for better performance
-      document.addEventListener('click', (event) => {
+      // Username click handlers - Use event delegation for better performance
+      // Remove any existing handler first to prevent duplicates
+      if (this.usernameClickHandler) {
+        document.removeEventListener('click', this.usernameClickHandler);
+      }
+
+      // Create and store the handler
+      this.usernameClickHandler = (event) => {
         // Check if clicked element or its parent has the username data attribute
         const usernameElement = event.target.closest('[data-username]');
         if (usernameElement && usernameElement.classList.contains('tvm-username-clickable')) {
           const username = usernameElement.getAttribute('data-username');
           if (username) {
             event.preventDefault();
+            event.stopPropagation();
             this.popupManager.showUserPopup(username);
           }
         }
-      });
+      };
+
+      document.addEventListener('click', this.usernameClickHandler);
 
       // Settings event listeners
-      this.settingsUIManager.setupSettingsEventListeners();
+      this.settingsUI.setupEventListeners();
 
     } catch (error) {
       this.errorHandler?.handle(error, 'UIManager Setup Event Listeners');
@@ -198,7 +212,7 @@ window.UIManager = class UIManager {
 
       const newPageSize = parseInt(pageSizeSelect.value);
       if (newPageSize > 0) {
-        this.configManager.update({ pageSize: newPageSize });
+        this.settingsManager.update({ pageSize: newPageSize });
         this.viewerListManager.resetToFirstPage();
         this.viewerListManager.updateViewerList();
       }
@@ -291,7 +305,7 @@ window.UIManager = class UIManager {
       // Delegate to managers
       this.viewerListManager.resetUI();
       this.statsManager.updateStats();
-      
+
       // Hide content
       const content = document.getElementById('tvm-content');
       if (content) {
@@ -315,19 +329,19 @@ window.UIManager = class UIManager {
     if (content) {
       content.style.display = 'block';
     }
-    
+
     // Show tabs when content is shown
     const tabs = document.getElementById('tvm-tabs');
     if (tabs) {
       tabs.style.display = 'flex';
     }
-    
+
     // Show history mode button when content is shown
     const historyBtn = document.getElementById('tvm-history-mode-btn');
     if (historyBtn) {
       historyBtn.style.display = 'block';
     }
-    
+
     // Initialize history mode button
     this.updateHistoryModeButton();
   }
@@ -384,15 +398,15 @@ window.UIManager = class UIManager {
   async updateChannelAvatar(channelName) {
     try {
       if (!channelName || !this.apiClient) return;
-      
+
       // Fetch user info for the channel
       const userInfoResponse = await this.apiClient.getUserInfo('channel_avatar', [channelName], 1);
-      
+
       if (userInfoResponse && userInfoResponse.success && userInfoResponse.userInfo && userInfoResponse.userInfo.length > 0) {
         const userInfo = userInfoResponse.userInfo[0];
         const avatarUrl = userInfo.profileImageURL;
         const description = userInfo.description;
-        
+
         if (avatarUrl) {
           const trackingTitleElement = document.getElementById('tvm-tracking-title');
           if (trackingTitleElement) {
@@ -423,12 +437,12 @@ window.UIManager = class UIManager {
     try {
       // Update stored channel name
       this.channelName = newChannelName;
-      
+
       // Update popup manager channel name
       if (this.popupManager) {
         this.popupManager.setChannelName(newChannelName);
       }
-      
+
       // Update stream name element in charts
       if (this.uiContainer) {
         const streamNameElement = this.uiContainer.querySelector('.tvm-stream-name');
@@ -436,10 +450,10 @@ window.UIManager = class UIManager {
           streamNameElement.textContent = newChannelName;
         }
       }
-      
+
       // Update channel avatar and name display
       this.updateChannelAvatar(newChannelName);
-      
+
     } catch (error) {
       this.errorHandler?.handle(error, 'UIManager Update Channel Name', { newChannelName });
     }
@@ -449,19 +463,19 @@ window.UIManager = class UIManager {
     try {
       // Clean up UI
       this.removeUI();
-      
+
       // Clean up any open popups
       if (this.popupManager) {
         this.popupManager.closeUserPopup();
       }
-      
+
       // Clean up event listeners and references
       this.isInitialized = false;
       this.channelName = null;
-      
+
       // Note: We don't destroy the managers themselves as they might be needed again
       // if the UI is re-injected. They are lightweight and don't hold heavy resources.
-      
+
     } catch (error) {
       this.errorHandler?.handle(error, 'UIManager Destroy');
     }
