@@ -7,6 +7,11 @@ class TrackingPageManager {
     this.debugUpdateInterval = null;
     this.hasUserInteracted = false; // Track if user has interacted with page
 
+    // Bot threshold control
+    this.calculatedBotThreshold = null; // Store the original calculated threshold
+    this.botThresholdOverride = null;
+    this.botThresholdLocked = true;
+
     // Page ID for coordination
     this.pageId = 'tracking_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
@@ -44,6 +49,14 @@ class TrackingPageManager {
   }
 
   setupBeforeUnloadConfirmation() {
+    // Remove existing listeners if present to prevent duplicates
+    if (this.beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+    }
+    if (this.keydownHandler) {
+      document.removeEventListener('keydown', this.keydownHandler);
+    }
+
     // Track user interaction to enable beforeunload
     const markInteraction = () => {
       this.hasUserInteracted = true;
@@ -55,7 +68,7 @@ class TrackingPageManager {
     });
 
     // Intercept keyboard shortcuts for refresh
-    document.addEventListener('keydown', (e) => {
+    this.keydownHandler = (e) => {
       if (!this.isTracking) return;
 
       // Check for F5 or Ctrl+R (refresh shortcuts)
@@ -93,16 +106,20 @@ class TrackingPageManager {
           }
         }
       }
-    });
+    };
+
+    document.addEventListener('keydown', this.keydownHandler);
 
     // Only enable beforeunload after user interaction to avoid Chrome warning
-    window.addEventListener('beforeunload', (e) => {
+    this.beforeUnloadHandler = (e) => {
       if (this.isTracking && this.hasUserInteracted) {
         e.preventDefault();
         e.returnValue = '';
         return '';
       }
-    });
+    };
+
+    window.addEventListener('beforeunload', this.beforeUnloadHandler);
   }
 
   async checkTrackingLock() {
@@ -294,10 +311,114 @@ class TrackingPageManager {
       await this.closeAndStopTracking();
     });
 
+    // Heatmap stats reset button
+    document.getElementById('tvm-heatmap-stats-reset')?.addEventListener('click', () => {
+      if (this.trackingMetrics?.chartManager?.heatmapChart) {
+        this.trackingMetrics.chartManager.heatmapChart.resetStatsFilter();
+      }
+    });
+
+    // Bot threshold slider controls
+    this.setupBotThresholdControls();
+
     // Handle page unload - cleanup only (confirmation handled in setupBeforeUnloadConfirmation)
     window.addEventListener('unload', async () => {
       await this.cleanup();
     });
+  }
+
+  setupBotThresholdControls() {
+    const lockButton = document.getElementById('tvm-bot-threshold-lock');
+    const slider = document.getElementById('tvm-bot-threshold-slider');
+    const valueDisplay = document.getElementById('tvm-bot-threshold-value');
+
+    if (!lockButton || !slider || !valueDisplay) return;
+
+    // Initialize state
+    this.botThresholdLocked = true;
+    this.botThresholdOverride = null;
+
+    // Lock/unlock button
+    lockButton.addEventListener('click', () => {
+      this.botThresholdLocked = !this.botThresholdLocked;
+
+      if (this.botThresholdLocked) {
+        // Lock: disable slider, show Auto, remove unlocked class
+        slider.disabled = true;
+        valueDisplay.textContent = 'Auto';
+        lockButton.classList.remove('unlocked');
+        lockButton.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+          </svg>
+        `;
+        this.botThresholdOverride = null;
+      } else {
+        // Unlock: enable slider, show value, add unlocked class, show unlocked icon
+        slider.disabled = false;
+        lockButton.classList.add('unlocked');
+        lockButton.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5-2.28 0-4.27 1.54-4.84 3.75l1.94.5C9.46 3.61 10.64 3 12 3c1.71 0 3.1 1.39 3.1 3.1V8H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+          </svg>
+        `;
+        // Update value based on current slider position
+        this.updateBotThresholdValue(slider.value);
+      }
+
+      // Re-run bot detection with new settings
+      if (this.trackingMetrics?.dataManager) {
+        this.trackingMetrics.dataManager.detectBots();
+      }
+    });
+
+    // Slider input
+    slider.addEventListener('input', (e) => {
+      if (!this.botThresholdLocked) {
+        this.updateBotThresholdValue(e.target.value);
+      }
+    });
+
+    // Slider change (on release)
+    slider.addEventListener('change', () => {
+      if (!this.botThresholdLocked && this.trackingMetrics?.dataManager) {
+        // Re-run bot detection when slider is released
+        this.trackingMetrics.dataManager.detectBots();
+      }
+    });
+  }
+
+  updateBotThresholdValue(sliderValue) {
+    const valueDisplay = document.getElementById('tvm-bot-threshold-value');
+    if (!valueDisplay) return;
+
+    // Use the stored calculated threshold for slider range
+    const calculatedMax = this.calculatedBotThreshold || 50;
+
+    // Slider represents 5 to 2x the calculated value (minimum of 5)
+    const minValue = 5;
+    const maxSliderValue = calculatedMax * 2;
+    const actualValue = Math.max(minValue, Math.round(minValue + (sliderValue / 100) * (maxSliderValue - minValue)));
+
+    this.botThresholdOverride = actualValue;
+    valueDisplay.textContent = actualValue.toString();
+  }
+
+  updateBotThresholdSlider(calculatedMax) {
+    const slider = document.getElementById('tvm-bot-threshold-slider');
+    const valueDisplay = document.getElementById('tvm-bot-threshold-value');
+
+    if (!slider || !valueDisplay || this.botThresholdLocked) return;
+
+    // Update slider max to represent 5 to 2x calculated value
+    // Slider stays at 0-100, but we interpret it as 5 to 2x calculatedMax
+    const minValue = 5;
+    const currentOverride = this.botThresholdOverride || calculatedMax;
+    const maxSliderValue = calculatedMax * 2;
+    const sliderPosition = Math.round(((currentOverride - minValue) / (maxSliderValue - minValue)) * 100);
+
+    slider.value = Math.max(0, sliderPosition);
+    valueDisplay.textContent = currentOverride.toString();
   }
 
   setupMessageListeners() {
@@ -639,5 +760,5 @@ class TrackingPageManager {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
-  new TrackingPageManager();
+  window.trackingPageManager = new TrackingPageManager();
 });

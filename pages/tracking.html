@@ -26,18 +26,28 @@
                 <div class="tvm-container">
                     <div class="tvm-header">
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <button id="tvm-pause-resume" class="tvm-btn tvm-btn-small" style="display: none;">Pause
-                                    Graphs</button>
+                            <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
                                 <button id="tvm-history-mode-btn" class="tvm-tab tvm-history-mode-tab"
                                     style="display: none;">
                                     Live
                                 </button>
+                                <div id="tvm-history-start-date" class="tvm-history-start-date" style="display: none;">
+                                </div>
+                                <div id="tvm-actual-viewers-stats"
+                                    style="display: none; font-size: 18px; font-weight: 600; color: #adadb8;">
+                                    Maximum possible viewers if all bots active
+                                    <span id="tvm-actual-viewers" style="color:white">0</span><span
+                                        id="tvm-total-viewers-ratio" style="display: none;">0</span>
+                                    (<span id="tvm-viewer-percentage" style="font-weight: 700;">0%</span>)
+                                </div>
                             </div>
-                            <div class="tvm-tabs" id="tvm-tabs" style="display: none;">
-                                <button class="tvm-tab tvm-tab-active" data-tab="graphs">Graphs</button>
-                                <button class="tvm-tab" data-tab="viewers">Viewers</button>
-                                <button class="tvm-tab" data-tab="settings">Settings</button>
+
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <div class="tvm-tabs" id="tvm-tabs" style="display: none;">
+                                    <button class="tvm-tab tvm-tab-active" data-tab="graphs">Graphs</button>
+                                    <button class="tvm-tab" data-tab="viewers">Viewers</button>
+                                    <button class="tvm-tab" data-tab="settings">Settings</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -78,7 +88,52 @@
                                     <div class="tvm-graph-container">
                                         <canvas id="tvm-creation-graph"></canvas>
                                         <div class="tvm-creation-left" id="tvm-creation-title">@viewermetrics</div>
-                                        <div class="tvm-creation-stats" id="tvm-creation-stats"></div>
+                                        <div class="tvm-creation-stats" id="tvm-creation-stats" style="display: none;">
+                                        </div>
+                                        <div class="tvm-bot-threshold-control" id="tvm-bot-threshold-control">
+                                            <div class="tvm-bot-threshold-label">Bot Threshold</div>
+                                            <input type="range" class="tvm-bot-threshold-slider"
+                                                id="tvm-bot-threshold-slider" min="0" max="100" value="50" disabled>
+                                            <div class="tvm-bot-threshold-footer">
+                                                <div class="tvm-bot-threshold-value" id="tvm-bot-threshold-value">Auto
+                                                </div>
+                                                <button class="tvm-bot-threshold-lock" id="tvm-bot-threshold-lock"
+                                                    title="Unlock to override calculated threshold">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path
+                                                            d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Heatmap Graph -->
+                                <div class="tvm-heatmap-wrapper">
+                                    <div style="display: flex; gap: 20px; align-items: flex-start;">
+                                        <div class="tvm-heatmap-container" id="tvm-heatmap-container">
+                                            <canvas id="tvm-heatmap-graph"></canvas>
+                                        </div>
+                                        <div class="tvm-heatmap-stats" id="tvm-heatmap-stats">
+                                            <div
+                                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                                <h4 id="tvm-heatmap-stats-title" style="margin: 0;">Viewer Duration
+                                                    Stats</h4>
+                                                <button id="tvm-heatmap-stats-reset" class="tvm-btn tvm-btn-small"
+                                                    style="display: none; padding: 4px 8px; font-size: 11px;">Reset</button>
+                                            </div>
+                                            <div class="tvm-heatmap-stats-content" id="tvm-heatmap-stats-content">
+                                                <!-- Stats will be populated here -->
+                                            </div>
+                                        </div>
+                                        <div class="tvm-stream-stats" id="tvm-stream-stats">
+                                            <h4 style="margin: 0 0 12px 0;">Stream Summary</h4>
+                                            <div class="tvm-stream-stats-content" id="tvm-stream-stats-content">
+                                                <!-- Stream stats will be populated here -->
+                                            </div>
+                                            <div class="tvm-stream-stats-indicator">After 5m</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -160,7 +215,7 @@
                                                             Auto-adjust timeout based on authenticated users
                                                             <div style="font-size: 12px; color: #999; margin-top: 5px;">
                                                                 Automatically calculates timeout: 5min for &lt;5000
-                                                                authenticated users, +1min per 1000 users
+                                                                authenticated users, +1min per 2000 users
                                                             </div>
                                                             <div id="tvm-effective-timeout"
                                                                 style="font-size: 12px; color: #00ff88; margin-top: 5px; font-weight: bold; display: none;">
@@ -202,6 +257,30 @@
                                                         </div>
                                                     </label>
                                                 </div>
+
+                                                <div style="margin-bottom: 20px;">
+                                                    <label style="display: flex; align-items: flex-start; gap: 8px;">
+                                                        <input type="checkbox" id="tvm-smooth-chart-lines">
+                                                        <div>
+                                                            Smooth chart lines
+                                                            <div style="font-size: 12px; color: #999; margin-top: 5px;">
+                                                                Remove duplicate values for smoother chart lines
+                                                            </div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+
+                                                <div style="margin-bottom: 20px;">
+                                                    <label style="display: block; margin-bottom: 8px;">
+                                                        History Retention (hours)
+                                                        <div style="font-size: 12px; color: #999; margin-top: 5px;">
+                                                            How long to keep graph history data (1-72 hours)
+                                                        </div>
+                                                    </label>
+                                                    <input type="number" id="tvm-history-retention" min="1" max="72"
+                                                        value="12" style="width: 120px;">
+                                                </div>
+
                                                 <div style="display: flex; gap: 10px; align-items: center;">
                                                     <button id="tvm-reset-settings"
                                                         class="tvm-btn tvm-btn-secondary">Reset to Defaults</button>
@@ -232,6 +311,7 @@
 
     <script src="../lib/chart.umd.min.js"></script>
     <script src="../lib/chartjs-adapter-date-fns.min.js"></script>
+    <script src="../shared/timeout-utils.js"></script>
     <script src="../content/core/settings-manager.js"></script>
     <script src="../content/core/error-handler.js"></script>
     <script src="../content/services/api-client.js"></script>
@@ -243,6 +323,7 @@
     <script src="../content/charts/chart-utils.js"></script>
     <script src="../content/charts/main-chart.js"></script>
     <script src="../content/charts/creation-chart.js"></script>
+    <script src="../content/charts/heatmap-chart.js"></script>
     <script src="../content/charts/chart-manager.js"></script>
     <script src="../content/managers/stats-manager.js"></script>
     <script src="../content/managers/viewer-list-manager.js"></script>

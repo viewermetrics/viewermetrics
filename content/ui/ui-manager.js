@@ -42,6 +42,7 @@ window.UIManager = class UIManager {
           break;
         case 'historyUpdated':
           this.statsManager.updateStats();
+          this.updateHistoryModeButton(); // Update date display when history changes
           break;
         case 'historyPointChanged':
           this.updateHistoryModeButton();
@@ -235,6 +236,7 @@ window.UIManager = class UIManager {
   updateHistoryModeButton() {
     try {
       const button = document.getElementById('tvm-history-mode-btn');
+      const dateDisplay = document.getElementById('tvm-history-start-date');
       if (!button) return;
 
       const isShowingLive = this.dataManager.isShowingLive();
@@ -244,6 +246,21 @@ window.UIManager = class UIManager {
         button.textContent = 'Live';
         button.className = 'tvm-tab tvm-history-mode-tab tvm-history-mode-live';
         button.style.cursor = 'default';
+
+        // Show the start date of history
+        const history = this.dataManager.getHistory();
+        if (dateDisplay && history.length > 0) {
+          const firstEntry = history[0];
+          const firstDate = new Date(firstEntry.timestamp);
+          const dateString = firstDate.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            timeZone: 'UTC'
+          });
+          dateDisplay.textContent = `${dateString}`;
+          dateDisplay.style.display = 'block';
+        }
       } else if (historyPoint) {
         const date = new Date(historyPoint.timestamp);
         const timeString = date.toLocaleTimeString('en-US', {
@@ -255,6 +272,11 @@ window.UIManager = class UIManager {
         button.textContent = `Viewing data from ${timeString}`;
         button.className = 'tvm-tab tvm-history-mode-tab tvm-history-mode-history';
         button.style.cursor = 'pointer';
+
+        // Hide date display when viewing historical point
+        if (dateDisplay) {
+          dateDisplay.style.display = 'none';
+        }
       }
     } catch (error) {
       this.errorHandler?.handle(error, 'UIManager Update History Mode Button');

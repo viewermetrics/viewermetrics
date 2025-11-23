@@ -15,7 +15,7 @@ window.SettingsManager = class SettingsManager {
         },
         timeoutDuration: {
             default: 600000,
-            min: 300000,
+            min: 60000,
             max: 3600000,
             type: 'number',
             unit: 'ms',
@@ -119,6 +119,14 @@ window.SettingsManager = class SettingsManager {
             type: 'number',
             description: 'Max history data points'
         },
+        historyRetentionHours: {
+            default: 12,
+            min: 1,
+            max: 72,
+            type: 'number',
+            unit: 'hours',
+            description: 'History data retention period'
+        },
         maxViewerListSize: {
             default: 250000,
             min: 1000,
@@ -199,6 +207,11 @@ window.SettingsManager = class SettingsManager {
             type: 'number',
             unit: 'ms',
             description: 'Chart update throttle interval'
+        },
+        smoothChartLines: {
+            default: true,
+            type: 'boolean',
+            description: 'Remove duplicate values for smoother chart lines'
         },
         chartColors: {
             default: {
@@ -412,13 +425,8 @@ window.SettingsManager = class SettingsManager {
             return this.settings.timeoutDuration;
         }
 
-        // Base: 5 minutes, add 1 minute per 1000 viewers over 5000
-        let timeoutMinutes = 5;
-        if (totalAuthenticatedCount > 5000) {
-            timeoutMinutes += Math.floor((totalAuthenticatedCount - 5000) / 1000);
-        }
-
-        return timeoutMinutes * 60000; // Convert to ms
+        // Use shared utility function
+        return window.TimeoutUtils.calculateAutoTimeout(totalAuthenticatedCount);
     }
 
     // Auto-adjust request interval based on viewer count
@@ -427,13 +435,8 @@ window.SettingsManager = class SettingsManager {
             return this.settings.requestInterval;
         }
 
-        // < 500: 5s, < 1000: 2s, >= 1000: 1s
-        if (totalAuthenticatedCount < 500) return 5000;
-        if (totalAuthenticatedCount < 1000) return 2000;
-        return 1000;
-        if (totalAuthenticatedCount < 500) return 5000;
-        if (totalAuthenticatedCount < 1000) return 2000;
-        return 1000;
+        // Use shared utility function
+        return window.TimeoutUtils.calculateAutoRequestInterval(totalAuthenticatedCount);
     }
 
     // Reset to defaults

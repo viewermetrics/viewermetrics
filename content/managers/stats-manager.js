@@ -108,6 +108,9 @@ window.StatsManager = class StatsManager {
       // Update pending info
       this.updateElement('tvm-pending', stats.pendingInfo.toString());
 
+      // Update bot ratio display
+      this.updateBotRatioDisplay();
+
       // Update API calls display
       this.updateApiCallsDisplay();
 
@@ -131,6 +134,62 @@ window.StatsManager = class StatsManager {
 
     } catch (error) {
       this.errorHandler?.handle(error, 'StatsManager Update Viewer Count');
+    }
+  }
+
+  updateBotRatioDisplay() {
+    try {
+      return; // Disabled for now
+      const botRatioInfo = document.getElementById('tvm-actual-viewers-stats');
+      if (!botRatioInfo) return;
+
+      const stats = this.dataManager.getStats();
+
+      // Only show if there are bots
+      if (stats.bots === 0) {
+        botRatioInfo.style.display = 'none';
+        return;
+      }
+
+      let totalViewers, bots;
+
+      if (this.dataManager.isShowingLive()) {
+        const history = this.dataManager.getHistory();
+        totalViewers = history.length > 0 ? history[history.length - 1].totalViewers : 0;
+        bots = stats.bots;
+      } else {
+        const historyPoint = this.dataManager.getShowingHistoryPoint();
+        if (!historyPoint) {
+          botRatioInfo.style.display = 'none';
+          return;
+        }
+        totalViewers = historyPoint.totalViewers;
+        bots = historyPoint.bots;
+      }
+
+      // Calculate actual viewers (total minus bots)
+      const actualViewers = Math.max(0, totalViewers - bots);
+
+      // Calculate percentage (actual / total)
+      const percentage = totalViewers > 0
+        ? ((actualViewers / totalViewers) * 100)
+        : 0;
+
+      // Update display elements
+      this.updateElement('tvm-actual-viewers', actualViewers.toString());
+      this.updateElement('tvm-total-viewers-ratio', totalViewers.toString());
+
+      const percentageElement = document.getElementById('tvm-viewer-percentage');
+      if (percentageElement) {
+        percentageElement.textContent = `${Math.round(percentage)}%`;
+        percentageElement.style.color = '#ff4444';  // Always red (shows bot impact)
+        percentageElement.style.fontWeight = 'bold';
+      }
+
+      botRatioInfo.style.display = 'block';
+
+    } catch (error) {
+      this.errorHandler?.handle(error, 'StatsManager Update Bot Ratio Display');
     }
   }
 

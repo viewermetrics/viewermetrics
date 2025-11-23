@@ -8,6 +8,7 @@ window.ChartManager = class ChartManager {
     this.channelName = channelName;
     this.mainChart = new MainChart(dataManager, settingsManager, errorHandler, channelName);
     this.creationChart = new CreationChart(dataManager, settingsManager, errorHandler, uiManager);
+    this.heatmapChart = new HeatmapChart(dataManager, settingsManager, errorHandler, channelName);
     this.isInitialized = false;
     this.isPaused = false;
     this.autoPauseTimer = null;
@@ -34,6 +35,7 @@ window.ChartManager = class ChartManager {
     this.channelName = channelName;
     // Update charts if they exist
     this.mainChart.setChannelName(channelName);
+    this.heatmapChart.setChannelName(channelName);
     if (this.creationChart.chart) this.creationChart.chart.update('none');
   }
 
@@ -41,6 +43,7 @@ window.ChartManager = class ChartManager {
     try {
       this.mainChart.resize();
       this.creationChart.resize();
+      this.heatmapChart.resize();
     } catch (error) {
       console.error('Error resizing charts:', error);
     }
@@ -61,6 +64,9 @@ window.ChartManager = class ChartManager {
               this.throttledUpdateCreationChart();
             }
           }
+          break;
+        case 'heatmapUpdated':
+          this.updateHeatmapChart();
           break;
         case 'historyPointChanged':
           // Update both charts when history point changes
@@ -103,6 +109,7 @@ window.ChartManager = class ChartManager {
 
       await this.mainChart.init();
       await this.creationChart.init();
+      await this.heatmapChart.init();
       this.isInitialized = true;
 
     } catch (error) {
@@ -180,10 +187,20 @@ window.ChartManager = class ChartManager {
     this.creationChart.update();
   }
 
+  updateHeatmapChart() {
+    if (!this.isInitialized) return;
+    try {
+      this.heatmapChart.update();
+    } catch (error) {
+      this.errorHandler?.handle(error, 'ChartManager Update Heatmap Chart');
+    }
+  }
+
   clearGraphs() {
     try {
       this.mainChart.clear();
       this.creationChart.clear();
+      this.heatmapChart.clear();
     } catch (error) {
       this.errorHandler?.handle(error, 'ChartManager Clear Graphs');
     }
@@ -204,6 +221,7 @@ window.ChartManager = class ChartManager {
     if (this.isInitialized) {
       this.updateMainChart();
       this.updateCreationChart();
+      this.updateHeatmapChart();
     }
   }
 
@@ -251,6 +269,7 @@ window.ChartManager = class ChartManager {
     // Destroy charts
     this.mainChart.destroy();
     this.creationChart.destroy();
+    this.heatmapChart.destroy();
 
     this.isInitialized = false;
   }

@@ -31,8 +31,15 @@ window.EnhancedDataManager = class DataManager {
     this.pendingUserInfo = new Set();
     this.isActive = false;
     this.cleanupInterval = null;
+    this.heatmapProcessInterval = null;
+    this.heatmapEnabled = true; // Heatmap tracking enabled by default
+
+    // Time tracking data for heatmap (persists even after viewer removal)
+    // Structure: Map<username, { createdAt, currentTimeInStream, pastTimeInStream }>
+    this.timeTrackingData = new Map();
 
     this.initCleanupInterval();
+    // Don't auto-start heatmap processing - wait for user to enable it
 
     // Subscribe to API client events for background tracking updates
     if (this.apiClient) {
@@ -52,10 +59,35 @@ window.EnhancedDataManager = class DataManager {
     }, this.settingsManager.get('cleanupInterval'));
   }
 
+  initHeatmapProcessing() {
+    // Heatmap now processes synchronously with history updates (no interval needed)
+    // Keeping this method for backward compatibility but it does nothing
+  }
+
+  enableHeatmap() {
+    this.heatmapEnabled = true;
+    // Immediately process data when enabling
+    this.processHeatmapData();
+    this.notify('heatmapEnabled', { enabled: true });
+  }
+
+  disableHeatmap() {
+    this.heatmapEnabled = false;
+    this.notify('heatmapEnabled', { enabled: false });
+  }
+
+  isHeatmapEnabled() {
+    return this.heatmapEnabled;
+  }
+
   destroy() {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
+    }
+    if (this.heatmapProcessInterval) {
+      clearInterval(this.heatmapProcessInterval);
+      this.heatmapProcessInterval = null;
     }
     this.observers.clear();
   }
@@ -103,8 +135,8 @@ window.EnhancedDataManager = class DataManager {
       const config = this.settingsManager.get();
       const now = Date.now();
 
-      // Clean old history data
-      const historyCutoff = now - (6 * 60 * 60 * 1000); // 6 hours
+      // Clean old history data using configurable retention period
+      const historyCutoff = now - (config.historyRetentionHours * 60 * 60 * 1000);
       const oldHistoryCount = this.state.history.length;
       this.state.history = this.state.history.filter(h => h.timestamp > historyCutoff);
 
@@ -237,6 +269,9 @@ window.EnhancedDataManager = class DataManager {
             viewer.lastSeen = now;
             updated = true;
           }
+
+          // Update time tracking data if viewer qualifies (creation date >= 2021-01-01)
+          this.updateTimeTrackingData(cleanUsername, viewer);
         }
       }
 
@@ -264,6 +299,12 @@ window.EnhancedDataManager = class DataManager {
     const cleanUsername = username.trim().toLowerCase();
 
     try {
+      // Get viewer data before removal to archive time tracking
+      const viewer = this.state.viewers.get(cleanUsername);
+      if (viewer) {
+        this.archiveViewerTimeData(cleanUsername, viewer);
+      }
+
       // Remove from viewers map
       const wasRemoved = this.state.viewers.delete(cleanUsername);
 
@@ -468,6 +509,9 @@ window.EnhancedDataManager = class DataManager {
           // Store profile image URL
           viewer.profileImageURL = userInfo.profileImageURL || null;
 
+          // Update time tracking data now that we have creation date
+          this.updateTimeTrackingData(username, viewer);
+
           updated = true;
         } else {
           // Failed to get info
@@ -545,6 +589,29 @@ window.EnhancedDataManager = class DataManager {
         baselineStats.totalPostStartMonthsExcludingTopx,
         baselineStats.totalPostStartAccountsExcludingTopx
       );
+
+      // Step 5: Cap maximum expected accounts to prevent extreme thresholds
+      // Only apply cap if we have pre-start baseline data to compare against
+      if (baselineStats.averagePreStartAccounts > 0 &&
+        maxExpectedAccounts > baselineStats.averagePreStartAccounts * 20) {
+        maxExpectedAccounts = Math.ceil(baselineStats.averagePreStartAccounts * 5);
+      }
+
+      // Store the calculated threshold before applying any override
+      if (window.trackingPageManager) {
+        window.trackingPageManager.calculatedBotThreshold = maxExpectedAccounts;
+      }
+
+      // Check for manual override from bot threshold slider
+      if (window.trackingPageManager && !window.trackingPageManager.botThresholdLocked &&
+        window.trackingPageManager.botThresholdOverride !== null) {
+        maxExpectedAccounts = window.trackingPageManager.botThresholdOverride;
+      } else {
+        // Update the slider with the calculated value (if unlocked)
+        if (window.trackingPageManager) {
+          window.trackingPageManager.updateBotThresholdSlider(maxExpectedAccounts);
+        }
+      }
 
       let result = this.calculateBotCounts(monthlyCounts, startDate, maxExpectedAccounts);
 
@@ -672,7 +739,7 @@ window.EnhancedDataManager = class DataManager {
 
     // If we have less than 5 unique months, use default expected value of 5
     // No big stream will have less than 5 unique months, so we shouldn't calculate from limited data
-    if (totalPostStartMonthsExcludingTopx < 5) {
+    if (totalPostStartMonthsExcludingTopx <= 5) {
       return 5; // Return default threshold for insufficient data
     }
 
@@ -761,6 +828,180 @@ window.EnhancedDataManager = class DataManager {
     this.state.metadata.averagePreStartAccounts = Math.ceil(averagePreStart);
   }
 
+  // Time Tracking for Heatmap - Update current time in stream
+  updateTimeTrackingData(username, viewer) {
+    try {
+      // Track all viewers with creation date
+      if (!viewer.createdAt) return;
+
+      // Calculate current time in stream
+      const now = Date.now();
+      const timeInStream = viewer.lastSeen - viewer.firstSeen;
+
+      // Get or create time tracking entry
+      let trackingEntry = this.timeTrackingData.get(username);
+
+      if (!trackingEntry) {
+        // Create new entry
+        trackingEntry = {
+          username: username,
+          createdAt: viewer.createdAt,
+          currentTimeInStream: timeInStream,
+          pastTimeInStream: 0
+        };
+        this.timeTrackingData.set(username, trackingEntry);
+      } else {
+        // Update existing entry's current time
+        trackingEntry.currentTimeInStream = timeInStream;
+      }
+    } catch (error) {
+      this.errorHandler?.handle(error, 'DataManager Update Time Tracking', { username });
+    }
+  }
+
+  // Time Tracking for Heatmap - Archive viewer's time when removed
+  archiveViewerTimeData(username, viewer) {
+    try {
+      // Track all viewers with creation date
+      if (!viewer.createdAt) return;
+
+      const trackingEntry = this.timeTrackingData.get(username);
+
+      if (trackingEntry) {
+        // Add current time to past time and reset current
+        trackingEntry.pastTimeInStream += trackingEntry.currentTimeInStream;
+        trackingEntry.currentTimeInStream = 0;
+      } else {
+        // Create entry with just past time
+        const timeInStream = viewer.lastSeen - viewer.firstSeen;
+        this.timeTrackingData.set(username, {
+          username: username,
+          createdAt: viewer.createdAt,
+          currentTimeInStream: 0,
+          pastTimeInStream: timeInStream
+        });
+      }
+    } catch (error) {
+      this.errorHandler?.handle(error, 'DataManager Archive Viewer Time', { username });
+    }
+  }
+
+  // Process heatmap data every 30 seconds
+  processHeatmapData() {
+    try {
+      // First, update current time for all active viewers
+      const now = Date.now();
+      for (const [username, trackingEntry] of this.timeTrackingData.entries()) {
+        const viewer = this.state.viewers.get(username);
+        if (viewer) {
+          // Viewer is still active, recalculate current time
+          trackingEntry.currentTimeInStream = viewer.lastSeen - viewer.firstSeen;
+        }
+      }
+
+      // Structure: Map<month, Map<timeRounded, totalTime>>
+      const heatmapData = new Map();
+
+      // First pass: collect all time values to determine max time for grouping
+      const allTimeValues = [];
+      for (const [username, trackingEntry] of this.timeTrackingData.entries()) {
+        const totalTimeMs = trackingEntry.currentTimeInStream + trackingEntry.pastTimeInStream;
+        const totalTimeMinutes = Math.round(totalTimeMs / 60000);
+        if (totalTimeMinutes > 0) {
+          allTimeValues.push(totalTimeMinutes);
+        }
+      }
+
+      // Determine grouping interval based on max time
+      const maxTime = allTimeValues.length > 0 ? Math.max(...allTimeValues) : 0;
+      let groupingInterval;
+
+      if (maxTime < 10) {
+        groupingInterval = 1; // 1-minute grouping
+      } else if (maxTime < 30) {
+        groupingInterval = 2; // 2-minute grouping
+      } else if (maxTime < 60) {
+        groupingInterval = 5; // 5-minute grouping
+      } else if (maxTime < 120) {
+        groupingInterval = 10; // 10-minute grouping
+      } else if (maxTime < 480) {
+        groupingInterval = 20; // 20-minute grouping
+      } else {
+        groupingInterval = 30; // 30-minute grouping
+      }
+
+      for (const [username, trackingEntry] of this.timeTrackingData.entries()) {
+        const createdDate = new Date(trackingEntry.createdAt);
+        const monthKey = createdDate.toISOString().split('T')[0].slice(0, 7); // YYYY-MM
+
+        // Calculate total time (current + past)
+        const totalTimeMs = trackingEntry.currentTimeInStream + trackingEntry.pastTimeInStream;
+        const totalTimeMinutes = Math.ceil(totalTimeMs / 60000); // Convert to minutes, ceil to count any partial minute
+
+        // Round to nearest grouping interval (ceil ensures we round up to next bracket)
+        const timeRounded = Math.ceil(totalTimeMinutes / groupingInterval) * groupingInterval;
+
+        // Skip entries with 0 time
+        if (timeRounded === 0 && trackingEntry.pastTimeInStream === 0) continue;
+
+        // Get or create month map
+        if (!heatmapData.has(monthKey)) {
+          heatmapData.set(monthKey, new Map());
+        }
+
+        const monthMap = heatmapData.get(monthKey);
+
+        // Add to existing value or create new entry
+        const currentValue = monthMap.get(timeRounded) || 0;
+        monthMap.set(timeRounded, currentValue + 1); // Count of viewers at this time duration
+      }
+
+      // Convert to array format for easier use in charts
+      // Format: [{ month, timeRounded, count }]
+
+      // Generate all months from botDateRangeStart to now (show all months)
+      const config = this.settingsManager.get();
+      const startDate = new Date(config.botDateRangeStart);
+      const endDate = new Date(); // Current date - no restriction
+
+      const allMonths = [];
+      const currentMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+      const lastMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+
+      while (currentMonth <= lastMonth) {
+        const monthKey = currentMonth.toISOString().split('T')[0].slice(0, 7); // YYYY-MM
+        allMonths.push(monthKey);
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+      }
+
+      // Only include months that have actual data to reduce chart complexity
+      const heatmapArray = [];
+      for (const [month, timeMap] of heatmapData.entries()) {
+        for (const [timeRounded, count] of timeMap.entries()) {
+          heatmapArray.push({
+            month: month,
+            time: timeRounded,
+            count: count
+          });
+        }
+      }
+
+      // Store in state metadata
+      this.state.metadata.heatmapData = heatmapArray;
+
+      // Notify observers
+      this.notify('heatmapUpdated', { data: heatmapArray });
+
+    } catch (error) {
+      this.errorHandler?.handle(error, 'DataManager Process Heatmap Data');
+    }
+  }
+
+  // Get current heatmap data
+  getHeatmapData() {
+    return this.state.metadata.heatmapData || [];
+  }
+
   // History management
   addHistoryPoint(totalViewers, authenticatedNonBots, bots, totalAuthenticated = 0) {
     try {
@@ -789,6 +1030,11 @@ window.EnhancedDataManager = class DataManager {
       // Clean graph zero data if enabled and we have enough data
       if (config.cleanGraphZeroData && this.state.history.length > 60) {
         this.cleanZeroDataFromStart();
+      }
+
+      // Process heatmap data if enabled
+      if (this.heatmapEnabled) {
+        this.processHeatmapData();
       }
 
       this.notify('historyUpdated', this.state.history.length);
@@ -1206,11 +1452,13 @@ window.EnhancedDataManager = class DataManager {
       this.state.viewers.clear();
       this.state.history = [];
       this.pendingUserInfo.clear();
+      this.timeTrackingData.clear(); // Clear heatmap data
       this.state.metadata = {
         lastUpdated: null,
         totalRequests: 0,
         sessionStart: Date.now(),
-        errors: []
+        errors: [],
+        heatmapData: [] // Reset heatmap data
       };
 
       this.notify('dataCleared');

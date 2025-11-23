@@ -45,8 +45,9 @@ window.MainChart = class MainChart {
             backgroundColor: 'transparent',
             borderWidth: 3,
             fill: false,
-            tension: 0.4,
+            tension: 0.6,
             cubicInterpolationMode: 'monotone',
+            spanGaps: true,
             pointRadius: 0,
             pointHoverRadius: 6,
             pointBackgroundColor: colors.totalViewers,
@@ -61,8 +62,9 @@ window.MainChart = class MainChart {
             backgroundColor: 'transparent',
             borderWidth: 2,
             fill: false,
-            tension: 0.4,
+            tension: 0.6,
             cubicInterpolationMode: 'monotone',
+            spanGaps: true,
             pointRadius: 0,
             pointHoverRadius: 5,
             pointBackgroundColor: colors.authenticatedNonBots || '#ffa500',
@@ -78,8 +80,9 @@ window.MainChart = class MainChart {
             backgroundColor: 'transparent',
             borderWidth: 2,
             fill: false,
-            tension: 0.4,
+            tension: 0.6,
             cubicInterpolationMode: 'monotone',
+            spanGaps: true,
             pointRadius: 0,
             pointHoverRadius: 5,
             pointBackgroundColor: colors.bots,
@@ -95,8 +98,9 @@ window.MainChart = class MainChart {
             backgroundColor: 'transparent',
             borderWidth: 2,
             fill: false,
-            tension: 0.4,
+            tension: 0.6,
             cubicInterpolationMode: 'monotone',
+            spanGaps: true,
             pointRadius: 0,
             pointHoverRadius: 5,
             pointBackgroundColor: colors.totalAuthenticated,
@@ -121,7 +125,8 @@ window.MainChart = class MainChart {
       },
       interaction: {
         intersect: false,
-        mode: 'index'
+        mode: 'nearest',
+        axis: 'x'
       },
       onClick: (event, elements) => {
         if (elements.length > 0) {
@@ -220,29 +225,8 @@ window.MainChart = class MainChart {
           }
         },
         tooltip: {
-          backgroundColor: 'rgba(14, 14, 16, 0.95)',
-          titleColor: '#efeff1',
-          bodyColor: '#efeff1',
-          borderColor: '#2e2e35',
-          borderWidth: 1,
-          cornerRadius: 8,
-          padding: 12,
-          displayColors: true,
-          usePointStyle: true,
-          titleFont: { size: 13, weight: '600' },
-          bodyFont: { size: 12 },
-          callbacks: {
-            title: function (context) {
-              const date = new Date(context[0].parsed.x);
-              return date.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                timeZone: 'UTC'
-              }) + ' UTC';
-            },
-            label: (context) => ChartUtils.formatTooltipLabel(context, this.dataManager)
-          }
+          enabled: false, // Disable default tooltip
+          external: this.createExternalTooltip.bind(this)
         }
       },
       animation: {
@@ -283,26 +267,183 @@ window.MainChart = class MainChart {
     });
   }
 
-  update() {
+  createExternalTooltip(context) {
+    // Get or create tooltip element
+    let tooltipEl = document.getElementById('chartjs-tooltip');
+    if (!tooltipEl) {
+      tooltipEl = document.createElement('div');
+      tooltipEl.id = 'chartjs-tooltip';
+      tooltipEl.style.background = 'rgba(14, 14, 16, 0.95)';
+      tooltipEl.style.borderRadius = '8px';
+      tooltipEl.style.color = '#efeff1';
+      tooltipEl.style.opacity = '0';
+      tooltipEl.style.pointerEvents = 'none';
+      tooltipEl.style.position = 'absolute';
+      tooltipEl.style.transform = 'translate(-50%, -100%)';
+      tooltipEl.style.transition = 'opacity 0.15s ease';
+      tooltipEl.style.padding = '12px';
+      tooltipEl.style.border = '1px solid #2e2e35';
+      tooltipEl.style.fontSize = '12px';
+      tooltipEl.style.zIndex = '1000';
+      document.body.appendChild(tooltipEl);
+    }
+
+    // Hide if no tooltip
+    const tooltipModel = context.tooltip;
+    if (tooltipModel.opacity === 0) {
+      tooltipEl.style.opacity = '0';
+      return;
+    }
+
+    // Find the closest history point based on x-axis position
+    const history = this.dataManager.getHistory();
+    if (!history || history.length === 0) {
+      tooltipEl.style.opacity = '0';
+      return;
+    }
+
+    // Get the chart and scales
+    const chart = context.chart;
+    const xScale = chart.scales.x;
+
+    // Get the x-axis value from the mouse position
+    // Chart.js provides this through the tooltip's dataPoints
+    let hoveredTimestamp = null;
+
+    if (tooltipModel.dataPoints && tooltipModel.dataPoints.length > 0) {
+      // Get the x value from the chart data point
+      hoveredTimestamp = tooltipModel.dataPoints[0].parsed.x;
+    } else {
+      // Fallback: try to get from pixel position
+      hoveredTimestamp = xScale.getValueForPixel(tooltipModel.caretX);
+    }
+
+    if (!hoveredTimestamp) {
+      tooltipEl.style.opacity = '0';
+      return;
+    }
+
+    // Find closest history point to the hovered timestamp
+    // When smooth lines are enabled, chart shows interpolated data,
+    // so we need to find the actual closest history point
+    let closestPoint = null;
+    let minDistance = Infinity;
+
+    for (const point of history) {
+      const distance = Math.abs(point.timestamp - hoveredTimestamp);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPoint = point;
+      }
+    }
+
+    if (!closestPoint) {
+      tooltipEl.style.opacity = '0';
+      return;
+    }
+
+    // Build tooltip content from the original history point
+    const date = new Date(closestPoint.timestamp);
+    const timeStr = date.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'UTC'
+    }) + ' UTC';
+
+    const config = this.settingsManager.get();
+    const colors = config.chartColors;
+
+    // Calculate bot percentage
+    const totalAuthenticated = closestPoint.totalAuthenticated || 0;
+    const bots = closestPoint.bots || 0;
+    const botPercentage = totalAuthenticated > 0 ? ((bots / totalAuthenticated) * 100).toFixed(1) : 0;
+
+    let innerHTML = `<div style="font-weight: 600; margin-bottom: 6px; font-size: 13px;">${timeStr}</div>`;
+
+    // Add each metric with color indicator
+    innerHTML += `
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+        <span style="width: 8px; height: 8px; background: ${colors.totalViewers}; border-radius: 50%;"></span>
+        <span>Viewers: ${closestPoint.totalViewers.toLocaleString()}</span>
+      </div>
+    `;
+
+    innerHTML += `
+      <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+        <span style="width: 8px; height: 2px; background: ${colors.authenticatedNonBots || '#ffa500'};"></span>
+        <span>Authenticated Users: ${(closestPoint.authenticatedNonBots || 0).toLocaleString()}</span>
+      </div>
+    `;
+
+    if (bots > 0) {
+      innerHTML += `
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="width: 8px; height: 2px; background: ${colors.bots};"></span>
+          <span>Authenticated Bots: ${bots.toLocaleString()} (${botPercentage}%)</span>
+        </div>
+      `;
+
+      innerHTML += `
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="width: 8px; height: 2px; background: ${colors.totalAuthenticated};"></span>
+          <span>Total Authenticated: ${totalAuthenticated.toLocaleString()}</span>
+        </div>
+      `;
+    }
+
+    tooltipEl.innerHTML = innerHTML;
+
+    // Position the tooltip
+    const position = context.chart.canvas.getBoundingClientRect();
+
+    tooltipEl.style.opacity = '1';
+    tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
+    tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY + 'px';
+  } update() {
     if (!this.chart) return;
 
     const history = this.dataManager.getHistory();
+    const smoothChartLines = this.settingsManager.get('smoothChartLines');
 
-    const totalViewersData = history.map(h => ({ x: h.timestamp, y: h.totalViewers }));
-    const authenticatedNonBotsData = history.map(h => ({
+    // Helper function to remove consecutive duplicate y-values
+    const removeDuplicates = (data) => {
+      if (!smoothChartLines || data.length <= 2) return data;
+
+      const result = [data[0]]; // Always keep first point
+      for (let i = 1; i < data.length - 1; i++) {
+        // Keep point if y-value differs from previous
+        if (data[i].y !== data[i - 1].y) {
+          result.push(data[i]);
+        }
+      }
+      result.push(data[data.length - 1]); // Always keep last point
+      return result;
+    };
+
+    const totalViewersData = removeDuplicates(history.map(h => ({ x: h.timestamp, y: h.totalViewers })));
+    const authenticatedNonBotsData = removeDuplicates(history.map(h => ({
       x: h.timestamp,
       y: h.authenticatedNonBots || 0
-    }));
-    const botsData = history.map(h => ({ x: h.timestamp, y: h.bots || 0 }));
-    const totalAuthenticatedData = history.map(h => ({
+    })));
+    const botsData = removeDuplicates(history.map(h => ({ x: h.timestamp, y: h.bots || 0 })));
+    const totalAuthenticatedData = removeDuplicates(history.map(h => ({
       x: h.timestamp,
       y: h.totalAuthenticated || 0
-    }));
+    })));
 
     this.chart.data.datasets[0].data = totalViewersData;
     this.chart.data.datasets[1].data = authenticatedNonBotsData;
     this.chart.data.datasets[2].data = botsData;
     this.chart.data.datasets[3].data = totalAuthenticatedData;
+
+    // Hide point hover highlights when smooth lines are enabled
+    // This prevents confusing hover indicators on interpolated curve points
+    const hoverRadius = smoothChartLines ? 0 : [6, 5, 5, 5];
+    this.chart.data.datasets[0].pointHoverRadius = smoothChartLines ? 0 : 6;
+    this.chart.data.datasets[1].pointHoverRadius = smoothChartLines ? 0 : 5;
+    this.chart.data.datasets[2].pointHoverRadius = smoothChartLines ? 0 : 5;
+    this.chart.data.datasets[3].pointHoverRadius = smoothChartLines ? 0 : 5;
 
     // Check if there are no bots present
     const hasNonZeroBots = botsData.some(point => point.y > 0);
@@ -367,6 +508,12 @@ window.MainChart = class MainChart {
   }
 
   destroy() {
+    // Clean up custom tooltip
+    const tooltipEl = document.getElementById('chartjs-tooltip');
+    if (tooltipEl) {
+      tooltipEl.remove();
+    }
+
     if (this.chart) {
       this.chart.destroy();
       this.chart = null;

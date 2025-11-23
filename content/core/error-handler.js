@@ -6,6 +6,12 @@ window.ErrorHandler = class ErrorHandler {
   }
 
   handle(error, context = '', data = null) {
+    // Ignore errors caused by extension context invalidation (extension reload/update)
+    if (this.isExtensionContextInvalidated(error)) {
+      console.log(`[${context}] Extension context invalidated - extension likely reloading`);
+      return;
+    }
+
     const errorInfo = {
       message: error.message,
       stack: error.stack,
@@ -17,7 +23,7 @@ window.ErrorHandler = class ErrorHandler {
     };
 
     this.errors.push(errorInfo);
-    
+
     // Keep only recent errors
     if (this.errors.length > this.maxErrors) {
       this.errors = this.errors.slice(-this.maxErrors);
@@ -30,17 +36,24 @@ window.ErrorHandler = class ErrorHandler {
     this.reportError(errorInfo);
   }
 
+  isExtensionContextInvalidated(error) {
+    const message = error?.message || '';
+    return message.includes('Extension context invalidated') ||
+      message.includes('message port closed') ||
+      message.includes('Cannot access');
+  }
+
   async reportError(errorInfo) {
     try {
       const stored = await chrome.storage.local.get('errorLog');
       const errorLog = stored.errorLog || [];
       errorLog.push(errorInfo);
-      
+
       // Keep only last 50 errors
       if (errorLog.length > 50) {
         errorLog.splice(0, errorLog.length - 50);
       }
-      
+
       await chrome.storage.local.set({ errorLog });
     } catch (e) {
       console.error('Failed to store error log:', e);
