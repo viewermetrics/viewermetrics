@@ -246,7 +246,6 @@ window.CreationChart = class CreationChart {
       this.chart.data.datasets[0].data = [];
       this.chart.data.datasets[1].data = [];
       this.chart.update('none');
-      this.updateStats();
       return;
     }
 
@@ -277,7 +276,6 @@ window.CreationChart = class CreationChart {
 
     this.chart.update('none');
 
-    this.updateStats();
     this.updateYAxisTitle();
   }
 
@@ -301,6 +299,15 @@ window.CreationChart = class CreationChart {
       const statsElement = document.getElementById('tvm-creation-stats');
       if (!statsElement) return;
 
+    } catch (error) {
+      this.errorHandler?.handle(error, 'CreationChart Update Stats');
+    }
+  }
+
+  updateYAxisTitle() {
+    try {
+      if (!this.chart) return;
+
       // Determine data source based on viewing mode
       let accountsInBotRange;
 
@@ -317,15 +324,6 @@ window.CreationChart = class CreationChart {
         }
       }
 
-      statsElement.textContent = `${accountsInBotRange} accounts`;
-    } catch (error) {
-      this.errorHandler?.handle(error, 'CreationChart Update Stats');
-    }
-  }
-
-  updateYAxisTitle() {
-    try {
-      if (!this.chart) return;
 
       // Determine data source based on viewing mode
       let metadata;
@@ -354,7 +352,7 @@ window.CreationChart = class CreationChart {
       if (averagePerMonth > 0) {
         const titleElement = document.getElementById('tvm-creation-title');
         if (titleElement) {
-          titleElement.textContent = `Per Month Before ${averagePreStartAccounts} • Expected After ${maxExpectedPostStartAccounts}`;
+          titleElement.textContent = `Per Month Before ${averagePreStartAccounts} • Expected After ${maxExpectedPostStartAccounts} • ${accountsInBotRange} accounts`;
         }
       }
       this.chart.update('none');

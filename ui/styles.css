@@ -214,8 +214,259 @@
 
 #tvm-graph,
 #tvm-creation-graph {
-  max-height: 440px;
+  max-height: 400px;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+}
+
+/* Heatmap Chart */
+.tvm-heatmap-wrapper {
+  margin-top: 8px;
+}
+
+.tvm-heatmap-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.tvm-heatmap-container {
+  background: linear-gradient(135deg, #0e0e10 0%, #1a1a1d 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #2e2e35;
+  height: 460px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.tvm-heatmap-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(145, 71, 255, 0.5), transparent);
+}
+
+.tvm-heatmap-stats {
+  width: 250px;
+  height: 500px;
+  background: #18181b;
+  border: 1px solid #2e2e35;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.tvm-stream-stats {
+  width: 250px;
+  height: 500px;
+  background: #18181b;
+  border: 1px solid #2e2e35;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tvm-stream-stats h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #adadb8;
+  font-weight: 600;
+}
+
+.tvm-stream-stats-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 10px;
+  color: #666;
+  font-style: italic;
+}
+
+.tvm-stream-stats-content {
+  font-size: 11px;
+  color: #efeff1;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tvm-stream-stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tvm-stream-stat-label {
+  font-size: 11px;
+  color: #adadb8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tvm-stream-stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #efeff1;
+}
+
+.tvm-stream-stat-subvalue {
+  font-size: 14px;
+  color: #adadb8;
+  margin-left: 4px;
+}
+
+.tvm-stream-stats-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tvm-stream-stats-content::-webkit-scrollbar-track {
+  background: #0e0e10;
+  border-radius: 3px;
+}
+
+.tvm-stream-stats-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #9147ff, #772ce8);
+  border-radius: 3px;
+}
+
+.tvm-stream-stats-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a970ff, #8845ff);
+}
+
+.tvm-heatmap-total-auth {
+  margin-top: auto;
+  padding-top: 15px;
+  font-size: 14px;
+  color: #efeff1;
+  border-top: 1px solid #2e2e35;
+}
+
+.tvm-retention-bar-container {
+  flex: 1;
+  display: flex;
+  height: 20px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #0e0e10;
+  gap: 2px;
+}
+
+.tvm-retention-bar-under {
+  background: #9147ff;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.tvm-retention-bar-over {
+  background: #5c1fb8;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.tvm-heatmap-stats h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #adadb8;
+  font-weight: 600;
+}
+
+.tvm-heatmap-stats-content {
+  font-size: 12px;
+  color: #efeff1;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+/* Custom scrollbar for stats panel */
+.tvm-heatmap-stats-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tvm-heatmap-stats-content::-webkit-scrollbar-track {
+  background: #0e0e10;
+  border-radius: 3px;
+}
+
+.tvm-heatmap-stats-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #9147ff, #772ce8);
+  border-radius: 3px;
+}
+
+.tvm-heatmap-stats-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a970ff, #8845ff);
+}
+
+.tvm-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tvm-stats-label {
+  flex: 0 0 60px;
+  font-size: 11px;
+  color: #adadb8;
+}
+
+.tvm-stats-bar-container {
+  flex: 1;
+  background: #0e0e10;
+  border-radius: 3px;
+  height: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tvm-stats-bar {
+  background: linear-gradient(90deg, #9147ff, #772ce8);
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.tvm-stats-value {
+  flex: 0 0 40px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tvm-heatmap-title {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  color: #9147ff;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 10;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#tvm-heatmap-graph {
+  height: 460px;
+  width: 100%;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+}
+
+.tvm-heatmap-container {
+  flex: 0 0 calc(100% - 540px);
+  min-width: 400px;
 }
 
 #tvm-creation-graph {
@@ -280,6 +531,123 @@
   font-family: 'Monaco', 'Consolas', monospace;
 }
 
+
+/* Bot Threshold Control */
+.tvm-bot-threshold-control {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: rgba(14, 14, 16, 0.8);
+  border: 1px solid #2e2e35;
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-width: 160px;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tvm-graph-container:hover .tvm-bot-threshold-control {
+  opacity: 1;
+}
+
+.tvm-bot-threshold-label {
+  color: #adadb8;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tvm-bot-threshold-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tvm-bot-threshold-lock {
+  background: transparent;
+  border: none;
+  color: #adadb8;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.tvm-bot-threshold-lock:hover {
+  color: #efeff1;
+}
+
+.tvm-bot-threshold-lock.unlocked {
+  color: #9147ff;
+}
+
+.tvm-bot-threshold-slider {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  background: #2e2e35;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.tvm-bot-threshold-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #9147ff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tvm-bot-threshold-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #9147ff;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s;
+}
+
+.tvm-bot-threshold-slider:hover::-webkit-slider-thumb {
+  background: #a970ff;
+}
+
+.tvm-bot-threshold-slider:hover::-moz-range-thumb {
+  background: #a970ff;
+}
+
+.tvm-bot-threshold-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tvm-bot-threshold-slider:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+  background: #555;
+}
+
+.tvm-bot-threshold-slider:disabled::-moz-range-thumb {
+  cursor: not-allowed;
+  background: #555;
+}
+
+.tvm-bot-threshold-value {
+  color: #efeff1;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
 
 /* Fixed tooltip for creation date graph */
 .tvm-creation-tooltip {
@@ -1028,6 +1396,13 @@
 .tvm-history-mode-tab.tvm-history-mode-history:hover {
   background: rgba(255, 255, 255, 0.15) !important;
   color: #efeff1 !important;
+}
+
+/* History Start Date */
+.tvm-history-start-date {
+  color: #adadb8;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 /* Tab Content */

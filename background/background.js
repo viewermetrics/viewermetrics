@@ -1,6 +1,7 @@
 // Background service worker for Viewer Metrics
 import { RequestInterceptor } from './request-interceptor.js';
 import { ApiManager } from './api-manager.js';
+import { calculateAutoTimeout, calculateAutoRequestInterval } from '../shared/timeout-utils.module.js';
 
 class BackgroundService {
   constructor() {
@@ -642,15 +643,14 @@ class BackgroundService {
     // Get the latest total authenticated count
     const totalAuthenticatedCount = session.data.metadata.authenticatedCount || 0;
 
-    // Use same logic as ConfigManager.calculateAutoTimeout
-    let timeoutMinutes = 5; // Base 5 minutes
-
-    if (totalAuthenticatedCount > 1000) {
-      const additionalThousands = Math.floor((totalAuthenticatedCount - 1000) / 1000);
-      timeoutMinutes += additionalThousands;
+    // Use shared utility function
+    const calculatedTimeout = calculateAutoTimeout(totalAuthenticatedCount);
+    if (calculatedTimeout) {
+      return calculatedTimeout;
     }
 
-    const calculatedTimeout = timeoutMinutes * 60000;
+    // Fallback to config default if no authenticated count
+    return config.timeoutDuration;
 
     return calculatedTimeout;
   }
@@ -665,23 +665,14 @@ class BackgroundService {
     // Get the latest total authenticated count
     const totalAuthenticatedCount = session.data.metadata.authenticatedCount || 0;
 
-    if (!totalAuthenticatedCount || totalAuthenticatedCount === 0) {
-      return config.requestInterval;
+    // Use shared utility function
+    const calculatedInterval = calculateAutoRequestInterval(totalAuthenticatedCount);
+    if (calculatedInterval) {
+      return calculatedInterval;
     }
 
-    // Under 500: every 5 seconds
-    // Under 1000: every 2 seconds  
-    // Over 1000: every 1 second
-    let calculatedInterval;
-    if (totalAuthenticatedCount < 500) {
-      calculatedInterval = 5000; // 5 seconds
-    } else if (totalAuthenticatedCount < 1000) {
-      calculatedInterval = 2000; // 2 seconds
-    } else {
-      calculatedInterval = 1000; // 1 second
-    }
-
-    return calculatedInterval;
+    // Fallback to config default if no authenticated count
+    return config.requestInterval;
   }
 
   // Check if request interval needs to be updated based on authenticated count changes

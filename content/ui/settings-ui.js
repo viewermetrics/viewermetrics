@@ -19,6 +19,8 @@ window.SettingsUI = class SettingsUI {
             this.setChecked('tvm-auto-adjust-request-interval', config.autoAdjustRequestInterval);
             this.setChecked('tvm-auto-pause-graphs', config.autoPauseGraphsOnZeroViewers);
             this.setChecked('tvm-clean-graph-zero-data', config.cleanGraphZeroData);
+            this.setChecked('tvm-smooth-chart-lines', config.smoothChartLines);
+            this.setValue('tvm-history-retention', config.historyRetentionHours);
 
             // Disable inputs if auto-adjust is enabled
             this.toggleInput('tvm-timeout', config.autoAdjustTimeout);
@@ -61,6 +63,8 @@ window.SettingsUI = class SettingsUI {
             updates.autoAdjustRequestInterval = this.getChecked('tvm-auto-adjust-request-interval');
             updates.autoPauseGraphsOnZeroViewers = this.getChecked('tvm-auto-pause-graphs');
             updates.cleanGraphZeroData = this.getChecked('tvm-clean-graph-zero-data');
+            updates.smoothChartLines = this.getChecked('tvm-smooth-chart-lines');
+            updates.historyRetentionHours = parseInt(this.getValue('tvm-history-retention')) || 12;
 
             // Save settings
             await this.settings.update(updates);
@@ -99,6 +103,8 @@ window.SettingsUI = class SettingsUI {
             this.setChecked('tvm-auto-adjust-request-interval', defaults.autoAdjustRequestInterval);
             this.setChecked('tvm-auto-pause-graphs', defaults.autoPauseGraphsOnZeroViewers);
             this.setChecked('tvm-clean-graph-zero-data', defaults.cleanGraphZeroData);
+            this.setChecked('tvm-smooth-chart-lines', defaults.smoothChartLines);
+            this.setValue('tvm-history-retention', defaults.historyRetentionHours);
 
             // Toggle inputs
             this.toggleInput('tvm-timeout', defaults.autoAdjustTimeout);

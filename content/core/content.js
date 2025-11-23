@@ -63,6 +63,12 @@ class TwitchViewerMetrics {
     if (!this.channelName) return;
 
     try {
+      // Check if extension context is still valid
+      if (!chrome.runtime?.id) {
+        console.log('Extension context invalidated, skipping UI injection');
+        return;
+      }
+
       // Wait for target element to be available
       const targetElement = await this.waitForElement('.channel-info-content');
 
