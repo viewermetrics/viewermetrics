@@ -50,8 +50,19 @@ window.StatsManager = class StatsManager {
         const botStyle = this.getBotPercentageStyle(botPercentage);
 
         // Calculate bot percentage from total authenticated (same as users)
+        // Use the calculated bots value based on bot calculation type
+        let displayBots;
+        if (botCalculationType === 1) {
+          // High Churn mode: bots includes quick leavers
+          const quickLeavers = Math.max(0, fixedAuthenticatedCount - (stats.accountsWithDates || 0));
+          displayBots = stats.bots + quickLeavers;
+        } else {
+          // Normal mode: use regular bots
+          displayBots = stats.bots;
+        }
+
         const botPercentageFromAuth = fixedAuthenticatedCount > 0
-          ? this.formatPercentageCeil((stats.bots / fixedAuthenticatedCount) * 100)
+          ? this.formatPercentageCeil((displayBots / fixedAuthenticatedCount) * 100)
           : 0;
         const botPercentageColor = '#ff4444';
 
@@ -63,9 +74,15 @@ window.StatsManager = class StatsManager {
         this.updateElement('tvm-non-bots',
           `${Math.max(0, authenticatedNonBots)} (<span style="color: ${nonBotPercentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${nonBotPercentageColor} !important; background: none !important;">${authenticatedNonBotsPercentage}%</span>)`
         );
-        this.updateElement('tvm-bots',
-          `${stats.bots} (<span style="color: ${botPercentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${botPercentageColor} !important; background: none !important;">${botPercentageFromAuth}%</span>)`
-        );
+
+        // Show nothing if bot percentage is 0
+        if (botPercentageFromAuth === '0' || botPercentageFromAuth === 0) {
+          this.updateElement('tvm-bots', '');
+        } else {
+          this.updateElement('tvm-bots',
+            `${displayBots} (<span style="color: ${botPercentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${botPercentageColor} !important; background: none !important;">${botPercentageFromAuth}%</span>)`
+          );
+        }
 
         // Show total users found in our viewer list (not the API's authenticated count)
         this.updateElement('tvm-authenticated', stats.totalUsersFound.toString());
@@ -111,8 +128,19 @@ window.StatsManager = class StatsManager {
           const botStyle = this.getBotPercentageStyle(botPercentage);
 
           // Calculate bot percentage from total authenticated (same as users)
+          // Use the calculated bots value based on bot calculation type
+          let displayBots;
+          if (botCalculationType === 1) {
+            // High Churn mode: bots includes quick leavers
+            const quickLeavers = Math.max(0, fixedAuthenticatedCount - (historyPoint.accountsWithDates || 0));
+            displayBots = historyPoint.bots + quickLeavers;
+          } else {
+            // Normal mode: use regular bots
+            displayBots = historyPoint.bots;
+          }
+
           const botPercentageFromAuth = fixedAuthenticatedCount > 0
-            ? this.formatPercentageCeil((historyPoint.bots / fixedAuthenticatedCount) * 100)
+            ? this.formatPercentageCeil((displayBots / fixedAuthenticatedCount) * 100)
             : 0;
           const botPercentageColor = '#ff4444';
 
@@ -124,9 +152,15 @@ window.StatsManager = class StatsManager {
           this.updateElement('tvm-non-bots',
             `${Math.max(0, authenticatedNonBots)} (<span style="color: ${nonBotPercentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${nonBotPercentageColor} !important; background: none !important;">${authenticatedNonBotsPercentage}%</span>)`
           );
-          this.updateElement('tvm-bots',
-            `${historyPoint.bots} (<span style="color: ${botPercentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${botPercentageColor} !important; background: none !important;">${botPercentageFromAuth}%</span>)`
-          );
+
+          // Show nothing if bot percentage is 0
+          if (botPercentageFromAuth === '0' || botPercentageFromAuth === 0) {
+            this.updateElement('tvm-bots', '');
+          } else {
+            this.updateElement('tvm-bots',
+              `${displayBots} (<span style="color: ${botPercentageColor} !important; font-weight: bold; -webkit-text-fill-color: ${botPercentageColor} !important; background: none !important;">${botPercentageFromAuth}%</span>)`
+            );
+          }
 
           // Show total users found in our viewer list (not the API's authenticated count)
           this.updateElement('tvm-authenticated', historyPoint.usersFound.toString());
@@ -257,11 +291,21 @@ window.StatsManager = class StatsManager {
   }
 
   formatPercentageFloor(percentage) {
-    return Math.floor(parseFloat(percentage)).toString();
+    const value = parseFloat(percentage);
+    // Show 1 decimal place if under 1% for better precision on low percentages
+    if (value < 1 && value > 0) {
+      return Math.floor(value * 10) / 10;
+    }
+    return Math.floor(value).toString();
   }
 
   formatPercentageCeil(percentage) {
-    return Math.ceil(parseFloat(percentage)).toString();
+    const value = parseFloat(percentage);
+    // Show 1 decimal place if over 99% but under 100% for heavily botted streams
+    if (value > 99 && value < 100) {
+      return Math.ceil(value * 10) / 10;
+    }
+    return Math.ceil(value).toString();
   }
 
   updateElement(id, content) {

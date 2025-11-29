@@ -9,7 +9,7 @@ window.HeatmapChart = class HeatmapChart {
         this.filteredMonth = null; // Track which month is selected for stats filtering
         this.retentionThresholdMinutes = 5; // Default 5 minutes, adjustable via slider (5-20 range)
         this.botCalculationType = 0; // 0 = Normal, 1 = High Churn
-        this.summarySkipMinutes = 5; // Default 5 minutes, adjustable via slider (1-20 range)
+        this.summarySkipMinutes = 5; // Default 5 minutes, adjustable via slider (0-20 range)
     }
 
     setBotCalculationType(type) {
@@ -500,8 +500,8 @@ window.HeatmapChart = class HeatmapChart {
 
             for (const item of filteredData) {
                 // item.time is already the bucketed time in minutes
-                // Use <= so that users AT the threshold bucket are counted as "under"
-                if (item.time <= retentionThresholdMinutes) {
+                // Use < so that only buckets below the threshold are counted as "under"
+                if (item.time < retentionThresholdMinutes) {
                     underThresholdCount += item.count;
                 } else {
                     overThresholdCount += item.count;
@@ -864,7 +864,7 @@ window.HeatmapChart = class HeatmapChart {
         let overThresholdCount = 0;
 
         for (const item of botData) {
-            if (item.time <= retentionThresholdMinutes) {
+            if (item.time < retentionThresholdMinutes) {
                 underThresholdCount += item.count;
             } else {
                 overThresholdCount += item.count;

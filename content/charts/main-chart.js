@@ -295,7 +295,6 @@ window.MainChart = class MainChart {
       tooltipEl.style.opacity = '0';
       tooltipEl.style.pointerEvents = 'none';
       tooltipEl.style.position = 'absolute';
-      tooltipEl.style.transform = 'translate(-50%, -100%)';
       tooltipEl.style.transition = 'opacity 0.15s ease';
       tooltipEl.style.padding = '12px';
       tooltipEl.style.border = '1px solid #2e2e35';
@@ -370,9 +369,23 @@ window.MainChart = class MainChart {
     const config = this.settingsManager.get();
     const colors = config.chartColors;
 
-    // Calculate bot percentage
+    // Calculate values based on bot calculation type
     const totalAuthenticated = closestPoint.totalAuthenticated || 0;
-    const bots = closestPoint.bots || 0;
+    let bots, authenticatedNonBots;
+
+    if (this.botCalculationType === 1) {
+      // High Churn mode
+      const accountsWithDates = closestPoint.accountsWithDates || 0;
+      const quickLeavers = Math.max(0, totalAuthenticated - accountsWithDates);
+      bots = closestPoint.bots + quickLeavers;
+      authenticatedNonBots = accountsWithDates - closestPoint.bots;
+    } else {
+      // Normal mode
+      bots = closestPoint.bots || 0;
+      authenticatedNonBots = closestPoint.authenticatedNonBots || 0;
+    }
+
+    // Calculate bot percentage
     const botPercentage = totalAuthenticated > 0 ? ((bots / totalAuthenticated) * 100).toFixed(1) : 0;
 
     let innerHTML = `<div style="font-weight: 600; margin-bottom: 6px; font-size: 13px;">${timeStr}</div>`;
@@ -388,7 +401,7 @@ window.MainChart = class MainChart {
     innerHTML += `
       <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
         <span style="width: 8px; height: 2px; background: ${colors.authenticatedNonBots || '#ffa500'};"></span>
-        <span>Authenticated Users: ${(closestPoint.authenticatedNonBots || 0).toLocaleString()}</span>
+        <span>Authenticated Users: ${Math.max(0, authenticatedNonBots).toLocaleString()}</span>
       </div>
     `;
 
@@ -410,12 +423,12 @@ window.MainChart = class MainChart {
 
     tooltipEl.innerHTML = innerHTML;
 
-    // Position the tooltip
+    // Position the tooltip in fixed top-left position relative to chart
     const position = context.chart.canvas.getBoundingClientRect();
 
     tooltipEl.style.opacity = '1';
-    tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
-    tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY + 'px';
+    tooltipEl.style.left = position.left + window.pageXOffset + 10 + 'px';
+    tooltipEl.style.top = position.top + window.pageYOffset + 10 + 'px';
   } toggleSmoothLines() {
     this.smoothLines = !this.smoothLines;
     this.update();

@@ -906,17 +906,18 @@ window.EnhancedDataManager = class DataManager {
       const timeBuckets = [0, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 240];
 
       // Helper function to find the appropriate bucket for a given time
+      // Times less than 5 go to 0, less than 10 go to 5, etc.
       const findTimeBucket = (minutes) => {
-        if (minutes === 0) return 0;
+        if (minutes < 5) return 0;
         if (minutes >= 240) return 240; // Cap at 240
 
-        // Find the bucket this time belongs to
-        for (let i = 0; i < timeBuckets.length - 1; i++) {
-          if (minutes > timeBuckets[i] && minutes <= timeBuckets[i + 1]) {
-            return timeBuckets[i + 1];
+        // Find the bucket this time belongs to (use lower boundary)
+        for (let i = timeBuckets.length - 1; i >= 0; i--) {
+          if (minutes >= timeBuckets[i]) {
+            return timeBuckets[i];
           }
         }
-        return 240; // Fallback to max bucket
+        return 0; // Fallback to 0 bucket
       };
 
       for (const [username, trackingEntry] of this.timeTrackingData.entries()) {
