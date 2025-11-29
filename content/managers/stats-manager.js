@@ -53,9 +53,9 @@ window.StatsManager = class StatsManager {
         // Use the calculated bots value based on bot calculation type
         let displayBots;
         if (botCalculationType === 1) {
-          // High Churn mode: bots includes quick leavers
-          const quickLeavers = Math.max(0, fixedAuthenticatedCount - (stats.accountsWithDates || 0));
-          displayBots = stats.bots + quickLeavers;
+          // High Churn mode: bots = totalAuthenticated - (accountsWithDates - algorithmBots)
+          // This matches the graph calculation exactly
+          displayBots = Math.max(0, fixedAuthenticatedCount - ((stats.accountsWithDates || 0) - (stats.bots || 0)));
         } else {
           // Normal mode: use regular bots
           displayBots = stats.bots;
@@ -87,8 +87,16 @@ window.StatsManager = class StatsManager {
         // Show total users found in our viewer list (not the API's authenticated count)
         this.updateElement('tvm-authenticated', stats.totalUsersFound.toString());
 
-        // Update scanned breakdown (no percentages)
-        this.updateElement('tvm-bots-count', stats.bots.toString());
+        // Update scanned breakdown with bot percentage (only show percentage if bots exist)
+        if (stats.bots > 0) {
+          const totalScanned = stats.bots + stats.accountsWithDates;
+          const botPercentageScanned = totalScanned > 0 ? Math.round((stats.bots / totalScanned) * 100) : 0;
+          this.updateElement('tvm-bots-count',
+            `${stats.bots} <span style="color: #999; font-size: 11px;">(${botPercentageScanned}%)</span>`
+          );
+        } else {
+          this.updateElement('tvm-bots-count', stats.bots.toString());
+        }
         this.updateElement('tvm-users-count', stats.accountsWithDates.toString());
       } else {
         const historyPoint = this.dataManager.getShowingHistoryPoint();
@@ -131,9 +139,9 @@ window.StatsManager = class StatsManager {
           // Use the calculated bots value based on bot calculation type
           let displayBots;
           if (botCalculationType === 1) {
-            // High Churn mode: bots includes quick leavers
-            const quickLeavers = Math.max(0, fixedAuthenticatedCount - (historyPoint.accountsWithDates || 0));
-            displayBots = historyPoint.bots + quickLeavers;
+            // High Churn mode: bots = totalAuthenticated - (accountsWithDates - algorithmBots)
+            // This matches the graph calculation exactly
+            displayBots = Math.max(0, fixedAuthenticatedCount - ((historyPoint.accountsWithDates || 0) - (historyPoint.bots || 0)));
           } else {
             // Normal mode: use regular bots
             displayBots = historyPoint.bots;
@@ -165,8 +173,16 @@ window.StatsManager = class StatsManager {
           // Show total users found in our viewer list (not the API's authenticated count)
           this.updateElement('tvm-authenticated', historyPoint.usersFound.toString());
 
-          // Update scanned breakdown (no percentages)
-          this.updateElement('tvm-bots-count', historyPoint.bots.toString());
+          // Update scanned breakdown with bot percentage (only show percentage if bots exist)
+          if (historyPoint.bots > 0) {
+            const totalScanned = historyPoint.bots + historyPoint.accountsWithDates;
+            const botPercentageScanned = totalScanned > 0 ? Math.round((historyPoint.bots / totalScanned) * 100) : 0;
+            this.updateElement('tvm-bots-count',
+              `${historyPoint.bots} <span style="color: #999; font-size: 11px;">(${botPercentageScanned}%)</span>`
+            );
+          } else {
+            this.updateElement('tvm-bots-count', historyPoint.bots.toString());
+          }
           this.updateElement('tvm-users-count', historyPoint.accountsWithDates.toString());
         } else {
           // No history point, clear stats

@@ -374,11 +374,11 @@ window.MainChart = class MainChart {
     let bots, authenticatedNonBots;
 
     if (this.botCalculationType === 1) {
-      // High Churn mode
+      // High Churn mode: matches graph calculation exactly
       const accountsWithDates = closestPoint.accountsWithDates || 0;
-      const quickLeavers = Math.max(0, totalAuthenticated - accountsWithDates);
-      bots = closestPoint.bots + quickLeavers;
-      authenticatedNonBots = accountsWithDates - closestPoint.bots;
+      const algorithmBots = closestPoint.bots || 0;
+      bots = Math.max(0, totalAuthenticated - (accountsWithDates - algorithmBots));
+      authenticatedNonBots = accountsWithDates - algorithmBots;
     } else {
       // Normal mode
       bots = closestPoint.bots || 0;

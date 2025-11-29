@@ -292,12 +292,13 @@ window.SettingsManager = class SettingsManager {
     validateAndSanitize(settings) {
         const sanitized = {};
 
+
         for (const [key, value] of Object.entries(settings)) {
             const schema = SettingsManager.SCHEMA[key];
 
+
             // Skip unknown settings (backward compatibility)
             if (!schema) {
-                console.warn(`Unknown setting: ${key}`);
                 continue;
             }
 
