@@ -89,8 +89,7 @@ window.StatsManager = class StatsManager {
 
         // Update scanned breakdown with bot percentage (only show percentage if bots exist)
         if (stats.bots > 0) {
-          const totalScanned = stats.bots + stats.accountsWithDates;
-          const botPercentageScanned = totalScanned > 0 ? Math.round((stats.bots / totalScanned) * 100) : 0;
+          const botPercentageScanned = stats.accountsWithDates > 0 ? Math.round((stats.bots / stats.accountsWithDates) * 100) : 0;
           this.updateElement('tvm-bots-count',
             `${stats.bots} <span style="color: #999; font-size: 11px;">(${botPercentageScanned}%)</span>`
           );
@@ -175,8 +174,7 @@ window.StatsManager = class StatsManager {
 
           // Update scanned breakdown with bot percentage (only show percentage if bots exist)
           if (historyPoint.bots > 0) {
-            const totalScanned = historyPoint.bots + historyPoint.accountsWithDates;
-            const botPercentageScanned = totalScanned > 0 ? Math.round((historyPoint.bots / totalScanned) * 100) : 0;
+            const botPercentageScanned = historyPoint.accountsWithDates > 0 ? Math.round((historyPoint.bots / historyPoint.accountsWithDates) * 100) : 0;
             this.updateElement('tvm-bots-count',
               `${historyPoint.bots} <span style="color: #999; font-size: 11px;">(${botPercentageScanned}%)</span>`
             );

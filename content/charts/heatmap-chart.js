@@ -671,7 +671,7 @@ window.HeatmapChart = class HeatmapChart {
                 <div class="tvm-stream-stat-value">${avgAuthenticated.toLocaleString()}<span class="tvm-stream-stat-subvalue" style="color: ${getPercentageColor(avgAuthPercent)};">(${avgAuthPercent}%)</span></div>
             </div>
             <div class="tvm-stream-stat-row">
-                <div class="tvm-stream-stat-label">Avg Non-Bots</div>
+                <div class="tvm-stream-stat-label">Avg Users</div>
                 <div class="tvm-stream-stat-value">${avgNonBots.toLocaleString()}<span class="tvm-stream-stat-subvalue" style="color: ${getPercentageColor(avgNonBotsPercent)};">(${avgNonBotsPercent}%)</span></div>
             </div>
             <div class="tvm-stream-stat-row">
@@ -687,7 +687,7 @@ window.HeatmapChart = class HeatmapChart {
                 <div class="tvm-stream-stat-value">${maxAuthenticatedFiltered.toLocaleString()}<span class="tvm-stream-stat-subvalue" style="color: ${getPercentageColor(maxAuthPercent)};">(${maxAuthPercent}%)</span></div>
             </div>
             <div class="tvm-stream-stat-row">
-                <div class="tvm-stream-stat-label">Max Non-Bots</div>
+                <div class="tvm-stream-stat-label">Max Users</div>
                 <div class="tvm-stream-stat-value">${maxNonBots.toLocaleString()}<span class="tvm-stream-stat-subvalue" style="color: ${getPercentageColor(maxNonBotsPercent)};">(${maxNonBotsPercent}%)</span></div>
             </div>
             <div class="tvm-stream-stat-row">
