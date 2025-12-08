@@ -8,6 +8,7 @@ window.EnhancedDataManager = class DataManager {
     this.settingsManager = settingsManager;
     this.errorHandler = errorHandler;
     this.apiClient = apiClient;
+    this.exportManager = new window.ExportManager(errorHandler);
 
     this.state = {
       viewers: new Map(),
@@ -248,6 +249,7 @@ window.EnhancedDataManager = class DataManager {
         if (!this.state.viewers.has(cleanUsername)) {
           this.state.viewers.set(cleanUsername, {
             username: cleanUsername,
+            id: null,
             firstSeen: now,
             lastSeen: now,
             createdAt: null,
@@ -868,17 +870,25 @@ window.EnhancedDataManager = class DataManager {
       let trackingEntry = this.timeTrackingData.get(username);
 
       if (!trackingEntry) {
-        // Create new entry
+        // Create new entry with all viewer data
         trackingEntry = {
           username: username,
+          id: viewer.id || null,
           createdAt: viewer.createdAt,
+          firstSeen: viewer.firstSeen,
+          lastSeen: viewer.lastSeen,
           currentTimeInStream: timeInStream,
           pastTimeInStream: 0
         };
         this.timeTrackingData.set(username, trackingEntry);
       } else {
-        // Update existing entry's current time
+        // Update existing entry
         trackingEntry.currentTimeInStream = timeInStream;
+        trackingEntry.lastSeen = viewer.lastSeen;
+        // Update ID if it wasn't set before
+        if (viewer.id && !trackingEntry.id) {
+          trackingEntry.id = viewer.id;
+        }
       }
     } catch (error) {
       this.errorHandler?.handle(error, 'DataManager Update Time Tracking', { username });
@@ -897,12 +907,20 @@ window.EnhancedDataManager = class DataManager {
         // Add current time to past time and reset current
         trackingEntry.pastTimeInStream += trackingEntry.currentTimeInStream;
         trackingEntry.currentTimeInStream = 0;
+        trackingEntry.lastSeen = viewer.lastSeen;
+        // Update ID if it wasn't set before
+        if (viewer.id && !trackingEntry.id) {
+          trackingEntry.id = viewer.id;
+        }
       } else {
         // Create entry with just past time
         const timeInStream = viewer.lastSeen - viewer.firstSeen;
         this.timeTrackingData.set(username, {
           username: username,
+          id: viewer.id || null,
           createdAt: viewer.createdAt,
+          firstSeen: viewer.firstSeen,
+          lastSeen: viewer.lastSeen,
           currentTimeInStream: 0,
           pastTimeInStream: timeInStream
         });
@@ -1639,4 +1657,79 @@ window.EnhancedDataManager = class DataManager {
       return [];
     }
   }
+
+  // Export tracking data methods
+  exportTrackingDataAsCSV(channelName = '') {
+    const data = this.getExportTrackingData();
+    return this.exportManager.exportTrackingDataAsCSV(channelName, data);
+  }
+
+  exportTrackingDataAsXML(channelName = '') {
+    const data = this.getExportTrackingData();
+    return this.exportManager.exportTrackingDataAsXML(channelName, data);
+  }
+
+  exportTrackingDataAsSQL(channelName = '') {
+    const data = this.getExportTrackingData();
+    return this.exportManager.exportTrackingDataAsSQL(channelName, data);
+  }
+
+  getExportTrackingData() {
+    const exportData = [];
+
+    // Combine viewer data with time tracking data
+    for (const [username, trackingEntry] of this.timeTrackingData.entries()) {
+      const viewer = this.state.viewers.get(username);
+      const totalTime = trackingEntry.currentTimeInStream + trackingEntry.pastTimeInStream;
+
+      // Use trackingEntry data first, fallback to viewer data
+      const id = trackingEntry.id || viewer?.id || null;
+      const firstSeen = trackingEntry.firstSeen ? new Date(trackingEntry.firstSeen).toISOString() :
+        (viewer ? new Date(viewer.firstSeen).toISOString() : null);
+      const lastSeen = trackingEntry.lastSeen ? new Date(trackingEntry.lastSeen).toISOString() :
+        (viewer ? new Date(viewer.lastSeen).toISOString() : null);
+
+      exportData.push({
+        username: username,
+        id: id,
+        createdAt: trackingEntry.createdAt || null,
+        firstSeen: firstSeen,
+        lastSeen: lastSeen,
+        timeInStream: totalTime
+      });
+    }
+
+    // Sort by username
+    exportData.sort((a, b) => a.username.localeCompare(b.username));
+
+    return exportData;
+  }
+
+  // Export viewer graph history data methods
+  exportViewerGraphDataAsCSV(channelName = '') {
+    const data = this.getViewerGraphHistoryData();
+    return this.exportManager.exportViewerGraphDataAsCSV(channelName, data);
+  }
+
+  exportViewerGraphDataAsXML(channelName = '') {
+    const data = this.getViewerGraphHistoryData();
+    return this.exportManager.exportViewerGraphDataAsXML(channelName, data);
+  }
+
+  exportViewerGraphDataAsSQL(channelName = '') {
+    const data = this.getViewerGraphHistoryData();
+    return this.exportManager.exportViewerGraphDataAsSQL(channelName, data);
+  }
+
+  getViewerGraphHistoryData() {
+    // Return history data with formatted structure for export
+    return this.state.history.map(point => ({
+      timestamp: new Date(point.timestamp).toISOString(),
+      totalViewers: point.totalViewers || 0,
+      totalAuthenticated: point.totalAuthenticated || 0,
+      authenticatedNonBots: point.authenticatedNonBots || 0,
+      bots: point.bots || 0
+    }));
+  }
 }
+

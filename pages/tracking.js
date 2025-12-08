@@ -327,6 +327,9 @@ class TrackingPageManager {
     // Bot calculation type toggle
     this.setupBotCalculationToggle();
 
+    // Export buttons
+    this.setupExportButtons();
+
     // Handle page unload - cleanup only (confirmation handled in setupBeforeUnloadConfirmation)
     window.addEventListener('unload', async () => {
       await this.cleanup();
@@ -806,6 +809,140 @@ class TrackingPageManager {
     } catch (error) {
       console.error('Error handling background tracking update:', error);
     }
+  }
+
+  setupExportButtons() {
+    // Tracking Data Exports
+    // CSV Export
+    document.getElementById('tvm-export-csv')?.addEventListener('click', () => {
+      try {
+        if (!this.trackingMetrics?.dataManager) {
+          alert('No tracking data available to export.');
+          return;
+        }
+
+        const csv = this.trackingMetrics.dataManager.exportTrackingDataAsCSV(this.channelName);
+        this.downloadFile(csv, `tracking_data_${this.channelName}_${Date.now()}.csv`, 'text/csv');
+        this.showExportFeedback('tvm-export-csv', 'Exported!');
+      } catch (error) {
+        console.error('Error exporting CSV:', error);
+        alert('Failed to export CSV data. Check console for details.');
+      }
+    });
+
+    // XML Export
+    document.getElementById('tvm-export-xml')?.addEventListener('click', () => {
+      try {
+        if (!this.trackingMetrics?.dataManager) {
+          alert('No tracking data available to export.');
+          return;
+        }
+
+        const xml = this.trackingMetrics.dataManager.exportTrackingDataAsXML(this.channelName);
+        this.downloadFile(xml, `tracking_data_${this.channelName}_${Date.now()}.xml`, 'text/xml');
+        this.showExportFeedback('tvm-export-xml', 'Exported!');
+      } catch (error) {
+        console.error('Error exporting XML:', error);
+        alert('Failed to export XML data. Check console for details.');
+      }
+    });
+
+    // SQL Export
+    document.getElementById('tvm-export-sql')?.addEventListener('click', () => {
+      try {
+        if (!this.trackingMetrics?.dataManager) {
+          alert('No tracking data available to export.');
+          return;
+        }
+
+        const sql = this.trackingMetrics.dataManager.exportTrackingDataAsSQL(this.channelName);
+        this.downloadFile(sql, `tracking_data_${this.channelName}_${Date.now()}.sql`, 'text/plain');
+        this.showExportFeedback('tvm-export-sql', 'Exported!');
+      } catch (error) {
+        console.error('Error exporting SQL:', error);
+        alert('Failed to export SQL data. Check console for details.');
+      }
+    });
+
+    // Viewer Graph Data Exports
+    // CSV Export
+    document.getElementById('tvm-export-graph-csv')?.addEventListener('click', () => {
+      try {
+        if (!this.trackingMetrics?.dataManager) {
+          alert('No viewer graph data available to export.');
+          return;
+        }
+
+        const csv = this.trackingMetrics.dataManager.exportViewerGraphDataAsCSV(this.channelName);
+        this.downloadFile(csv, `viewer_graph_${this.channelName}_${Date.now()}.csv`, 'text/csv');
+        this.showExportFeedback('tvm-export-graph-csv', 'Exported!');
+      } catch (error) {
+        console.error('Error exporting graph CSV:', error);
+        alert('Failed to export graph CSV data. Check console for details.');
+      }
+    });
+
+    // XML Export
+    document.getElementById('tvm-export-graph-xml')?.addEventListener('click', () => {
+      try {
+        if (!this.trackingMetrics?.dataManager) {
+          alert('No viewer graph data available to export.');
+          return;
+        }
+
+        const xml = this.trackingMetrics.dataManager.exportViewerGraphDataAsXML(this.channelName);
+        this.downloadFile(xml, `viewer_graph_${this.channelName}_${Date.now()}.xml`, 'text/xml');
+        this.showExportFeedback('tvm-export-graph-xml', 'Exported!');
+      } catch (error) {
+        console.error('Error exporting graph XML:', error);
+        alert('Failed to export graph XML data. Check console for details.');
+      }
+    });
+
+    // SQL Export
+    document.getElementById('tvm-export-graph-sql')?.addEventListener('click', () => {
+      try {
+        if (!this.trackingMetrics?.dataManager) {
+          alert('No viewer graph data available to export.');
+          return;
+        }
+
+        const sql = this.trackingMetrics.dataManager.exportViewerGraphDataAsSQL(this.channelName);
+        this.downloadFile(sql, `viewer_graph_${this.channelName}_${Date.now()}.sql`, 'text/plain');
+        this.showExportFeedback('tvm-export-graph-sql', 'Exported!');
+      } catch (error) {
+        console.error('Error exporting graph SQL:', error);
+        alert('Failed to export graph SQL data. Check console for details.');
+      }
+    });
+  }
+
+  downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  showExportFeedback(buttonId, text) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+
+    const originalText = btn.textContent;
+    const originalBg = btn.style.backgroundColor;
+
+    btn.textContent = text;
+    btn.style.backgroundColor = '#00ff88';
+
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.style.backgroundColor = originalBg;
+    }, 1500);
   }
 
   async cleanup() {

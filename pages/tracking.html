@@ -337,6 +337,54 @@
                                                 <div id="tvm-debug-content">Loading...</div>
                                             </div>
                                         </div>
+
+                                        <!-- Export Panel - Tracking Data -->
+                                        <div class="tvm-settings" style="margin-top: 20px;">
+                                            <div class="tvm-settings-panel">
+                                                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #efeff1;">Export
+                                                    Tracking Data</h3>
+                                                <div style="font-size: 12px; color: #adadb8; margin-bottom: 15px;">
+                                                    Export viewer tracking histogram data including channel, username,
+                                                    ID,
+                                                    creation date, first seen, last seen, and time in stream.
+                                                </div>
+                                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                                    <button id="tvm-export-csv" class="tvm-btn tvm-btn-primary">
+                                                        Export as CSV
+                                                    </button>
+                                                    <button id="tvm-export-xml" class="tvm-btn tvm-btn-primary">
+                                                        Export as XML
+                                                    </button>
+                                                    <button id="tvm-export-sql" class="tvm-btn tvm-btn-primary">
+                                                        Export as SQL
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Export Panel - Viewer Graph -->
+                                        <div class="tvm-settings" style="margin-top: 20px;">
+                                            <div class="tvm-settings-panel">
+                                                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #efeff1;">Export
+                                                    Viewer Graph Data</h3>
+                                                <div style="font-size: 12px; color: #adadb8; margin-bottom: 15px;">
+                                                    Export viewer graph history including channel, timestamp, total
+                                                    viewers, total authenticated, authenticated users (non-bots), and
+                                                    authenticated bots.
+                                                </div>
+                                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                                    <button id="tvm-export-graph-csv" class="tvm-btn tvm-btn-primary">
+                                                        Export as CSV
+                                                    </button>
+                                                    <button id="tvm-export-graph-xml" class="tvm-btn tvm-btn-primary">
+                                                        Export as XML
+                                                    </button>
+                                                    <button id="tvm-export-graph-sql" class="tvm-btn tvm-btn-primary">
+                                                        Export as SQL
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -353,6 +401,7 @@
     <script src="../content/core/settings-manager.js"></script>
     <script src="../content/core/error-handler.js"></script>
     <script src="../content/services/api-client.js"></script>
+    <script src="../content/services/export-manager.js"></script>
     <script src="../content/services/enhanced-data-manager.js"></script>
     <script src="../content/utils/format-utils.js"></script>
     <script src="../content/utils/dom-utils.js"></script>

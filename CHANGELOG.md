@@ -2,6 +2,11 @@
 
 All notable changes to the Viewer Metrics Chrome Extension will be documented in this file.
 
+## [0.9.93] - 2025-12-09
+- Export of viewer tracking data
+- Export of viewer graph history
+
+
 ## [0.9.92] - 2025-12-03
 - Fixed an issue with bot calculation
 
