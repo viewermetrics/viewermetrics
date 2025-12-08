@@ -166,6 +166,58 @@ window.ExportManager = class ExportManager {
         }
     }
 
+    // JSON export methods
+    exportTrackingDataAsJSON(channelName, trackingData) {
+        try {
+            const exportData = {
+                version: '1.0',
+                type: 'tracking',
+                channel: channelName,
+                exportedAt: new Date().toISOString(),
+                data: trackingData
+            };
+            return JSON.stringify(exportData, null, 2);
+        } catch (error) {
+            this.errorHandler?.handle(error, 'Export Tracking Data JSON');
+            throw error;
+        }
+    }
+
+    exportViewerGraphDataAsJSON(channelName, historyData) {
+        try {
+            const exportData = {
+                version: '1.0',
+                type: 'viewer_graph',
+                channel: channelName,
+                exportedAt: new Date().toISOString(),
+                data: historyData
+            };
+            return JSON.stringify(exportData, null, 2);
+        } catch (error) {
+            this.errorHandler?.handle(error, 'Export Viewer Graph Data JSON');
+            throw error;
+        }
+    }
+
+    exportFullStateAsJSON(channelName, fullStateData) {
+        try {
+            const exportData = {
+                version: '1.0',
+                type: 'full_state',
+                channel: channelName,
+                exportedAt: new Date().toISOString(),
+                timeTrackingData: fullStateData.timeTrackingData,
+                history: fullStateData.history,
+                viewers: fullStateData.viewers,
+                metadata: fullStateData.metadata
+            };
+            return JSON.stringify(exportData, null, 2);
+        } catch (error) {
+            this.errorHandler?.handle(error, 'Export Full State JSON');
+            throw error;
+        }
+    }
+
     // Escape utilities
     escapeCSV(str) {
         if (str === null || str === undefined) return '';

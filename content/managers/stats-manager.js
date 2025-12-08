@@ -16,8 +16,13 @@ window.StatsManager = class StatsManager {
         const latestTotal = history.length > 0 ? history[history.length - 1].totalViewers : 0;
         const latestHistoryPoint = history.length > 0 ? history[history.length - 1] : null;
 
+        // In analysis mode, use last history point data instead of live (empty) data
+        const isAnalysisMode = this.dataManager.isInAnalysisMode && this.dataManager.isInAnalysisMode();
+
         // Use the fixed authenticated count from API, not the calculated totalViewers
-        const fixedAuthenticatedCount = this.dataManager.getAuthenticatedCount();
+        const fixedAuthenticatedCount = isAnalysisMode && latestHistoryPoint
+          ? latestHistoryPoint.totalAuthenticated
+          : this.dataManager.getAuthenticatedCount();
 
         // Calculate percentages
         const fixedAuthenticatedPercentage = fixedAuthenticatedCount && latestTotal
@@ -26,22 +31,32 @@ window.StatsManager = class StatsManager {
 
         // Calculate authenticated non-bots based on bot calculation type
         // When live, use current stats values (not historical snapshot)
+        // In analysis mode, use last history point values
         const botCalculationType = window.trackingPageManager ? window.trackingPageManager.botCalculationType : 0;
         let authenticatedNonBots;
+        let accountsWithDates, bots;
+
+        if (isAnalysisMode && latestHistoryPoint) {
+          accountsWithDates = latestHistoryPoint.accountsWithDates || 0;
+          bots = latestHistoryPoint.bots || 0;
+        } else {
+          accountsWithDates = stats.accountsWithDates || 0;
+          bots = stats.bots || 0;
+        }
+
         if (botCalculationType === 1) {
           // High Churn mode: authenticatedNonBots = accountsWithDates - bots
-          // Use current live stats values, not historical snapshot
-          authenticatedNonBots = Math.max(0, (stats.accountsWithDates || 0) - stats.bots);
+          authenticatedNonBots = Math.max(0, accountsWithDates - bots);
         } else {
           // Normal mode: authenticatedNonBots = totalAuthenticated - bots
-          authenticatedNonBots = fixedAuthenticatedCount - stats.bots;
+          authenticatedNonBots = fixedAuthenticatedCount - bots;
         }
         const authenticatedNonBotsPercentage = fixedAuthenticatedCount > 0
           ? this.formatPercentageFloor((authenticatedNonBots / fixedAuthenticatedCount) * 100)
           : 0;
 
-        const botPercentage = stats.accountsWithDates > 0
-          ? this.formatPercentage((stats.bots / stats.accountsWithDates) * 100)
+        const botPercentage = accountsWithDates > 0
+          ? this.formatPercentage((bots / accountsWithDates) * 100)
           : 0;
 
         // Color coding
@@ -55,10 +70,10 @@ window.StatsManager = class StatsManager {
         if (botCalculationType === 1) {
           // High Churn mode: bots = totalAuthenticated - (accountsWithDates - algorithmBots)
           // This matches the graph calculation exactly
-          displayBots = Math.max(0, fixedAuthenticatedCount - ((stats.accountsWithDates || 0) - (stats.bots || 0)));
+          displayBots = Math.max(0, fixedAuthenticatedCount - (accountsWithDates - bots));
         } else {
           // Normal mode: use regular bots
-          displayBots = stats.bots;
+          displayBots = bots;
         }
 
         const botPercentageFromAuth = fixedAuthenticatedCount > 0
@@ -85,18 +100,22 @@ window.StatsManager = class StatsManager {
         }
 
         // Show total users found in our viewer list (not the API's authenticated count)
-        this.updateElement('tvm-authenticated', stats.totalUsersFound.toString());
+        // In analysis mode, use last history point value
+        const totalUsersFound = isAnalysisMode && latestHistoryPoint
+          ? latestHistoryPoint.totalUsersFound || stats.totalUsersFound
+          : stats.totalUsersFound;
+        this.updateElement('tvm-authenticated', totalUsersFound.toString());
 
         // Update scanned breakdown with bot percentage (only show percentage if bots exist)
-        if (stats.bots > 0) {
-          const botPercentageScanned = stats.accountsWithDates > 0 ? Math.round((stats.bots / stats.accountsWithDates) * 100) : 0;
+        if (bots > 0) {
+          const botPercentageScanned = accountsWithDates > 0 ? Math.round((bots / accountsWithDates) * 100) : 0;
           this.updateElement('tvm-bots-count',
-            `${stats.bots} <span style="color: #999; font-size: 11px;">(${botPercentageScanned}%)</span>`
+            `${bots} <span style="color: #999; font-size: 11px;">(${botPercentageScanned}%)</span>`
           );
         } else {
-          this.updateElement('tvm-bots-count', stats.bots.toString());
+          this.updateElement('tvm-bots-count', bots.toString());
         }
-        this.updateElement('tvm-users-count', stats.accountsWithDates.toString());
+        this.updateElement('tvm-users-count', accountsWithDates.toString());
       } else {
         const historyPoint = this.dataManager.getShowingHistoryPoint();
         if (historyPoint) {

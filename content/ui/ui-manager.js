@@ -45,6 +45,7 @@ window.UIManager = class UIManager {
           this.updateHistoryModeButton(); // Update date display when history changes
           break;
         case 'historyPointChanged':
+          this.statsManager.updateStats(); // Update stats when viewing history point
           this.updateHistoryModeButton();
           break;
         case 'dataCleared':

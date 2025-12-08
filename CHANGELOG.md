@@ -3,9 +3,9 @@
 All notable changes to the Viewer Metrics Chrome Extension will be documented in this file.
 
 ## [0.9.93] - 2025-12-09
-- Export of viewer tracking data
-- Export of viewer graph history
-
+- Export of viewer tracking data (CSV, XML, SQL, JSON)
+- Export of viewer graph history data (CSV, XML, SQL, JSON)
+- Session save and load functionality with analysis mode  
 
 ## [0.9.92] - 2025-12-03
 - Fixed an issue with bot calculation

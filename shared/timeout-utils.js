@@ -13,22 +13,19 @@ function calculateAutoTimeout(totalAuthenticatedCount) {
     }
 
     // Tiered timeout system (optimized for concurrent API processing):
-    // Based on real performance: 33,000 users = 60-120 seconds
-    // <1000 users: 45 seconds
-    // <5000 users: 1 minute
-    // <15000 users: 90 seconds
-    // 15000+ users: 2 minutes base + 10 seconds per 10000 additional users
     let timeoutMinutes;
 
     if (totalAuthenticatedCount < 1000) {
-        timeoutMinutes = 0.75; // 45 seconds
+        timeoutMinutes = 1.5; // 1 minutes
     } else if (totalAuthenticatedCount < 5000) {
-        timeoutMinutes = 1; // 1 minute
+        timeoutMinutes = 2; // 2 minutes
+    } else if (totalAuthenticatedCount < 10000) {
+        timeoutMinutes = 2.5; // 2.5 minutes
     } else if (totalAuthenticatedCount < 15000) {
-        timeoutMinutes = 1.5; // 90 seconds
+        timeoutMinutes = 3; // 3 minutes
     } else {
-        // 15000+ viewers: 2 minutes base + 10 seconds per 10000 viewers
-        timeoutMinutes = 2 + Math.floor((totalAuthenticatedCount - 15000) / 10000) * 0.167;
+        // 15000+ viewers: 3 minutes base + 15 seconds per 5000 viewers
+        timeoutMinutes = 3 + Math.floor((totalAuthenticatedCount - 15000) / 5000) * 0.25;
     }
 
     return timeoutMinutes * 60000; // Convert to milliseconds

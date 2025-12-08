@@ -864,6 +864,23 @@ class TrackingPageManager {
       }
     });
 
+    // JSON Export
+    document.getElementById('tvm-export-json')?.addEventListener('click', () => {
+      try {
+        if (!this.trackingMetrics?.dataManager) {
+          alert('No tracking data available to export.');
+          return;
+        }
+
+        const json = this.trackingMetrics.dataManager.exportTrackingDataAsJSON(this.channelName);
+        this.downloadFile(json, `tracking_data_${this.channelName}_${Date.now()}.json`, 'application/json');
+        this.showExportFeedback('tvm-export-json', 'Exported!');
+      } catch (error) {
+        console.error('Error exporting JSON:', error);
+        alert('Failed to export JSON data. Check console for details.');
+      }
+    });
+
     // Viewer Graph Data Exports
     // CSV Export
     document.getElementById('tvm-export-graph-csv')?.addEventListener('click', () => {
@@ -915,6 +932,125 @@ class TrackingPageManager {
         alert('Failed to export graph SQL data. Check console for details.');
       }
     });
+
+    // JSON Export
+    document.getElementById('tvm-export-graph-json')?.addEventListener('click', () => {
+      try {
+        if (!this.trackingMetrics?.dataManager) {
+          alert('No viewer graph data available to export.');
+          return;
+        }
+
+        const json = this.trackingMetrics.dataManager.exportViewerGraphDataAsJSON(this.channelName);
+        this.downloadFile(json, `viewer_graph_${this.channelName}_${Date.now()}.json`, 'application/json');
+        this.showExportFeedback('tvm-export-graph-json', 'Exported!');
+      } catch (error) {
+        console.error('Error exporting graph JSON:', error);
+        alert('Failed to export graph JSON data. Check console for details.');
+      }
+    });
+
+    // Full State Export
+    document.getElementById('tvm-export-full-state')?.addEventListener('click', () => {
+      try {
+        if (!this.trackingMetrics?.dataManager) {
+          alert('No session data available to export.');
+          return;
+        }
+
+        // Confirm before exporting (can be a large file)
+        if (!confirm('Save complete session? This may create a large file depending on the amount of data collected.')) {
+          return;
+        }
+
+        const json = this.trackingMetrics.dataManager.exportFullStateAsJSON(this.channelName);
+        this.downloadFile(json, `session_${this.channelName}_${Date.now()}.json`, 'application/json');
+        this.showExportFeedback('tvm-export-full-state', 'Exported!');
+      } catch (error) {
+        console.error('Error exporting full state:', error);
+        alert('Failed to export session data. Check console for details.');
+      }
+    });
+
+    // Full State Import
+    document.getElementById('tvm-import-full-state')?.addEventListener('click', () => {
+      document.getElementById('tvm-import-file-input')?.click();
+    });
+
+    document.getElementById('tvm-import-file-input')?.addEventListener('change', async (e) => {
+      try {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const jsonString = event.target.result;
+
+            if (!this.trackingMetrics?.dataManager) {
+              alert('Tracking not initialized. Please start tracking first.');
+              return;
+            }
+
+            // Stop tracking before importing
+            if (this.isTracking) {
+              await this.stopTracking();
+            }
+
+            // Import and enter analysis mode
+            const result = this.trackingMetrics.dataManager.importFullStateFromJSON(jsonString);
+
+            if (result.success) {
+              // Initialize charts if not already initialized
+              if (this.trackingMetrics.chartManager && !this.trackingMetrics.chartManager.isInitialized) {
+                await this.trackingMetrics.chartManager.initGraphs();
+              }
+
+              // Show content and tabs for analysis mode
+              if (this.trackingMetrics.uiManager) {
+                this.trackingMetrics.uiManager.showContent();
+              }
+
+              // Update all charts with imported data
+              if (this.trackingMetrics.chartManager) {
+                this.trackingMetrics.chartManager.updateGraphs();
+                this.trackingMetrics.chartManager.updateHeatmapChart();
+              }
+
+              // Update viewer list with imported data
+              if (this.trackingMetrics.uiManager) {
+                // Initialize date filter with imported data
+                this.trackingMetrics.uiManager.viewerListManager.dateFilterNeedsUpdate = true;
+                // Force update viewer list after a delay to ensure DOM is ready
+                setTimeout(() => {
+                  this.trackingMetrics.uiManager.viewerListManager.forceViewerListUpdate();
+                }, 1000);
+              }
+
+              // Update UI for analysis mode
+              this.updateAnalysisModeUI(result.channel, result.exportedAt);
+
+              this.showExportFeedback('tvm-import-full-state', 'Imported!');
+
+              const exportDate = result.exportedAt ? new Date(result.exportedAt).toLocaleString() : 'Unknown';
+              alert(`Session imported successfully!\n\nAnalysis Mode Active\nChannel: ${result.channel}\nExported: ${exportDate}\n\nTracking Data: ${result.trackingDataCount} viewers\nHistory Points: ${result.historyPoints}\nActive Viewers: ${result.viewerCount}\n\nNote: All data is now read-only for analysis.`);
+            } else {
+              alert(`Import failed: ${result.error}`);
+            }
+          } catch (error) {
+            console.error('Error reading import file:', error);
+            alert('Failed to read import file. Make sure it\'s a valid JSON export.');
+          }
+        };
+        reader.readAsText(file);
+
+        // Reset file input
+        e.target.value = '';
+      } catch (error) {
+        console.error('Error importing full state:', error);
+        alert('Failed to import session data. Check console for details.');
+      }
+    });
   }
 
   downloadFile(content, filename, mimeType) {
@@ -943,6 +1079,72 @@ class TrackingPageManager {
       btn.textContent = originalText;
       btn.style.backgroundColor = originalBg;
     }, 1500);
+  }
+
+  updateAnalysisModeUI(channelName, exportedAt) {
+    // Update title to show analysis mode
+    const titleElement = document.getElementById('tvm-tracking-title');
+    if (titleElement) {
+      const exportDate = exportedAt ? new Date(exportedAt).toLocaleDateString() : 'Unknown';
+      titleElement.textContent = `📊 Analysis Mode - ${channelName} (${exportDate})`;
+      titleElement.style.color = '#ffa500'; // Orange color for analysis mode
+    }
+
+    // Hide/disable tracking controls
+    const closeBtn = document.getElementById('tvm-close-btn');
+    if (closeBtn) {
+      closeBtn.textContent = 'Exit Analysis Mode';
+      closeBtn.onclick = () => this.exitAnalysisMode();
+    }
+
+    // Hide switch channel button in analysis mode
+    const switchBtn = document.getElementById('tvm-switch-channel-btn');
+    if (switchBtn) {
+      switchBtn.style.display = 'none';
+    }
+
+    // Add analysis mode banner
+    this.showAnalysisModeBanner(channelName, exportedAt);
+  }
+
+  showAnalysisModeBanner(channelName, exportedAt) {
+    // Remove existing banner if present
+    const existingBanner = document.getElementById('tvm-analysis-banner');
+    if (existingBanner) {
+      existingBanner.remove();
+    }
+
+    const exportDate = exportedAt ? new Date(exportedAt).toLocaleString() : 'Unknown';
+
+    const banner = document.createElement('div');
+    banner.id = 'tvm-analysis-banner';
+    banner.style.cssText = `
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+      color: white;
+      padding: 12px 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      border-bottom: 3px solid #d16b2e;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    `;
+    banner.innerHTML = `
+      📊 ANALYSIS MODE - Viewing Historical Data | Channel: ${channelName} | Exported: ${exportDate}
+    `;
+
+    const header = document.querySelector('.tvm-tracking-header');
+    if (header && header.parentNode) {
+      header.parentNode.insertBefore(banner, header.nextSibling);
+    }
+  }
+
+  async exitAnalysisMode() {
+    if (!this.trackingMetrics?.dataManager) return;
+
+    if (confirm('Exit analysis mode? This will close the tab.')) {
+      // Exit analysis mode and close the tab
+      window.close();
+    }
   }
 
   async cleanup() {
