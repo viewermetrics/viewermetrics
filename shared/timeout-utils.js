@@ -12,20 +12,17 @@ function calculateAutoTimeout(totalAuthenticatedCount) {
         return null; // Caller should use default
     }
 
-    // Tiered timeout system (optimized for concurrent API processing):
     let timeoutMinutes;
 
     if (totalAuthenticatedCount < 1000) {
-        timeoutMinutes = 1.5; // 1 minutes
+        timeoutMinutes = 1;
     } else if (totalAuthenticatedCount < 5000) {
-        timeoutMinutes = 2; // 2 minutes
-    } else if (totalAuthenticatedCount < 10000) {
-        timeoutMinutes = 2.5; // 2.5 minutes
+        timeoutMinutes = 1.5;
     } else if (totalAuthenticatedCount < 15000) {
-        timeoutMinutes = 3; // 3 minutes
+        timeoutMinutes = 2;
     } else {
-        // 15000+ viewers: 3 minutes base + 15 seconds per 5000 viewers
-        timeoutMinutes = 3 + Math.floor((totalAuthenticatedCount - 15000) / 5000) * 0.25;
+        // 15000+ viewers: 2 minutes base + 10 seconds per 5000 viewers
+        timeoutMinutes = 2 + Math.floor((totalAuthenticatedCount - 15000) / 5000) * 0.167;
     }
 
     return timeoutMinutes * 60000; // Convert to milliseconds
