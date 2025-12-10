@@ -1019,8 +1019,6 @@ class TrackingPageManager {
 
               // Update viewer list with imported data
               if (this.trackingMetrics.uiManager) {
-                // Initialize date filter with imported data
-                this.trackingMetrics.uiManager.viewerListManager.dateFilterNeedsUpdate = true;
                 // Force update viewer list after a delay to ensure DOM is ready
                 setTimeout(() => {
                   this.trackingMetrics.uiManager.viewerListManager.forceViewerListUpdate();

@@ -7,9 +7,9 @@ window.ViewerListManager = class ViewerListManager {
     this.tabManager = tabManager;
     this.currentPage = 1;
     this.lastViewerListUpdate = 0;
-    this.lastDateFilterUpdate = 0;
-    this.dateFilterNeedsUpdate = false;
-    this.dateFilterInUse = false;
+    this.currentDateFilter = 'all'; // Internal date filter state (no dropdown)
+    this.skipBotStatsUpdate = false; // Flag to skip bot stats during pagination
+    this.showAllMonths = false; // Toggle state for showing all months
   }
 
   scheduleViewerListUpdate() {
@@ -38,17 +38,9 @@ window.ViewerListManager = class ViewerListManager {
 
   updateViewerList() {
     try {
-      // Check if date filter needs updating (once per day or when flagged), but not if user is actively using it
-      const now = Date.now();
-      const oneDayMs = 24 * 60 * 60 * 1000;
-      if (!this.dateFilterInUse && (this.dateFilterNeedsUpdate || now - this.lastDateFilterUpdate > oneDayMs)) {
-        this.initializeDateFilter();
-        this.dateFilterNeedsUpdate = false;
-      }
-
       const searchTerm = document.getElementById('tvm-search')?.value || '';
       const sortBy = document.getElementById('tvm-sort')?.value || 'timeInStream';
-      const dateFilter = document.getElementById('tvm-date-filter')?.value || 'all';
+      const dateFilter = this.currentDateFilter || 'all';
 
       const config = this.settingsManager.get();
       const result = this.dataManager.getViewerList(this.currentPage, config.pageSize, searchTerm, sortBy, dateFilter);
@@ -66,8 +58,9 @@ window.ViewerListManager = class ViewerListManager {
         return;
       }
 
-      // Build viewer list HTML
-      listContent.innerHTML = this.generateViewerListHTML(result.viewers);
+      // Build viewer list DOM and append directly
+      listContent.textContent = '';
+      listContent.appendChild(this.generateViewerListDOM(result.viewers));
 
       // Update both pagination controls
       this.updatePagination(result, pagination, paginationTop);
@@ -80,7 +73,7 @@ window.ViewerListManager = class ViewerListManager {
     }
   }
 
-  generateViewerListHTML(viewers) {
+  generateViewerListDOM(viewers) {
     // Use document fragment for better performance with large datasets
     const fragment = document.createDocumentFragment();
     const table = document.createElement('table');
@@ -148,10 +141,8 @@ window.ViewerListManager = class ViewerListManager {
     table.appendChild(tbody);
     fragment.appendChild(table);
 
-    // Convert to HTML string for compatibility with existing code
-    const tempDiv = document.createElement('div');
-    tempDiv.appendChild(fragment);
-    return tempDiv.innerHTML;
+    // Return the fragment directly instead of converting to HTML string
+    return fragment;
   }
 
   updatePagination(result, pagination, paginationTop) {
@@ -185,7 +176,9 @@ window.ViewerListManager = class ViewerListManager {
     try {
       this.currentPage += delta;
       if (this.currentPage < 1) this.currentPage = 1;
+      this.skipBotStatsUpdate = true; // Skip expensive bot stats during pagination
       this.updateViewerList();
+      this.skipBotStatsUpdate = false;
     } catch (error) {
       this.errorHandler?.handle(error, 'ViewerListManager Change Page', { delta });
     }
@@ -195,7 +188,9 @@ window.ViewerListManager = class ViewerListManager {
     try {
       // Reset to first page when searching
       this.currentPage = 1;
+      this.skipBotStatsUpdate = true; // Skip expensive bot stats during search
       this.updateViewerList();
+      this.skipBotStatsUpdate = false;
     } catch (error) {
       this.errorHandler?.handle(error, 'ViewerListManager Search Input');
     }
@@ -205,71 +200,33 @@ window.ViewerListManager = class ViewerListManager {
     try {
       // Reset to first page when changing sort
       this.currentPage = 1;
+      this.skipBotStatsUpdate = true; // Skip expensive bot stats during sort
       this.updateViewerList();
+      this.skipBotStatsUpdate = false;
     } catch (error) {
       this.errorHandler?.handle(error, 'ViewerListManager Sort Change');
     }
   }
 
-  onDateFilterChange() {
+  clearDateFilter() {
     try {
-      // Reset to first page when changing date filter
+      // Clear date filter and reset to first page
       this.currentPage = 1;
+      this.currentDateFilter = 'all';
       this.updateViewerList();
     } catch (error) {
-      this.errorHandler?.handle(error, 'ViewerListManager Date Filter Change');
-    }
-  }
-
-  initializeDateFilter() {
-    try {
-      const dateFilterSelect = document.getElementById('tvm-date-filter');
-      if (!dateFilterSelect) return;
-
-      // Preserve current selection
-      const currentValue = dateFilterSelect.value || 'all';
-
-      // Clear existing options
-      dateFilterSelect.innerHTML = '<option value="all">All Dates</option>';
-
-      // Get available months from data manager
-      const availableMonths = this.dataManager.getAvailableAccountCreationMonths();
-
-      // Add monthly options for available data
-      availableMonths.forEach(monthData => {
-        const option = document.createElement('option');
-        option.value = monthData.value;
-        option.textContent = `${monthData.label} (${monthData.count})`;
-        dateFilterSelect.appendChild(option);
-      });
-
-      // Restore previous selection if it still exists in the new options
-      if (currentValue !== 'all') {
-        const optionExists = Array.from(dateFilterSelect.options).some(option => option.value === currentValue);
-        if (optionExists) {
-          dateFilterSelect.value = currentValue;
-        } else {
-          // If the previously selected option no longer exists, reset to 'all'
-          dateFilterSelect.value = 'all';
-        }
-      }
-
-      // Update timestamp
-      this.lastDateFilterUpdate = Date.now();
-    } catch (error) {
-      this.errorHandler?.handle(error, 'ViewerListManager Initialize Date Filter');
+      this.errorHandler?.handle(error, 'ViewerListManager Clear Date Filter');
     }
   }
 
   setDateFilter(yearMonth) {
     try {
-      const dateFilterSelect = document.getElementById('tvm-date-filter');
-      if (!dateFilterSelect) return;
+      // Set date filter internally and reset to first page
+      this.currentPage = 1;
+      this.currentDateFilter = yearMonth;
+      this.updateViewerList();
 
-      dateFilterSelect.value = yearMonth;
-      this.onDateFilterChange();
-
-      // Switch to viewers tab when creation graph is clicked
+      // Switch to viewers tab when month is clicked
       this.tabManager.switchTab('viewers');
     } catch (error) {
       this.errorHandler?.handle(error, 'ViewerListManager Set Date Filter', { yearMonth });
@@ -318,53 +275,87 @@ window.ViewerListManager = class ViewerListManager {
 
   updateBotStatsPanels() {
     try {
+      // Skip during pagination only
+      if (this.skipBotStatsUpdate) {
+        return;
+      }
+
       this.updateTopBottedMonths();
       this.updateTopSameDayCounts();
     } catch (error) {
       this.errorHandler?.handle(error, 'ViewerListManager Update Bot Stats Panels');
     }
-  }
-
-  updateTopBottedMonths() {
+  } updateTopBottedMonths() {
     try {
       const container = document.getElementById('tvm-top-months-list');
       if (!container) return;
 
-      const topMonths = this.dataManager.getTopBottedMonths(10);
+      // Get either top 10 or all months based on toggle state
+      const limit = this.showAllMonths ? 999999 : 10;
+      const allMonths = this.dataManager.getTopBottedMonths(limit);
 
-      if (topMonths.length === 0) {
+      if (allMonths.length === 0) {
         container.innerHTML = '<p class="tvm-empty">No data available</p>';
         return;
       }
 
-      const dateFilter = document.getElementById('tvm-date-filter')?.value || 'all';
+      // If showing all months, sort by date descending (newest first)
+      const topMonths = this.showAllMonths
+        ? allMonths.sort((a, b) => b.date - a.date)
+        : allMonths;
 
-      // Calculate the cutoff date (1 month from now based on BOT_DATE_RANGE_MONTHS_FROM_NOW)
-      const now = new Date();
-      const cutoffDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 1 month ago
+      const dateFilter = this.currentDateFilter || 'all';
 
-      container.innerHTML = topMonths.map(month => {
+      // Update toggle button text
+      const toggleBtn = document.getElementById('tvm-toggle-all-months');
+      if (toggleBtn) {
+        toggleBtn.textContent = this.showAllMonths ? '📋 Top 10' : '📅 Show All';
+      }
+
+      // Render clear filter button in separate container (outside scroll area)
+      const clearFilterContainer = document.getElementById('tvm-clear-date-filter-container');
+      if (clearFilterContainer) {
+        if (dateFilter !== 'all') {
+          clearFilterContainer.style.display = 'block';
+          clearFilterContainer.innerHTML = `
+            <div class="tvm-bot-item" id="tvm-clear-date-filter" style="cursor: pointer; background: #2c2c3e; border-left: 3px solid #00b8d4;">
+              <span class="tvm-bot-item-label">✕ Clear Filter</span>
+              <span class="tvm-bot-item-count"></span>
+            </div>
+          `;
+        } else {
+          clearFilterContainer.style.display = 'none';
+          clearFilterContainer.innerHTML = '';
+        }
+      }
+
+      // Build list of months
+      let html = '';
+
+      html += topMonths.map(month => {
         const isActive = dateFilter === month.monthKey ? ' active' : '';
-        const [year, monthNum] = month.monthKey.split('-').map(Number);
-        const monthDate = new Date(year, monthNum - 1, 1);
-        const isDisabled = (year < 2020 || monthDate > cutoffDate) ? ' disabled' : '';
         return `
-          <div class="tvm-bot-item${isActive}${isDisabled}" data-month="${month.monthKey}" data-disabled="${year < 2020 || monthDate > cutoffDate}">
+          <div class="tvm-bot-item${isActive}" data-month="${month.monthKey}">
             <span class="tvm-bot-item-label">${month.monthName}</span>
             <span class="tvm-bot-item-count">${month.count}</span>
           </div>
         `;
       }).join('');
 
+      container.innerHTML = html;
+
       // Add scrollable class to top months list
       container.classList.add('scrollable');
 
-      // Add click handlers
-      container.querySelectorAll('.tvm-bot-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const isDisabled = item.getAttribute('data-disabled') === 'true';
-          if (isDisabled) return; // Don't allow clicking on months before 2020 or after cutoff date
+      // Add clear button handler
+      const clearBtn = document.getElementById('tvm-clear-date-filter');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => this.clearDateFilter());
+      }
 
+      // Add click handlers for month items
+      container.querySelectorAll('.tvm-bot-item[data-month]').forEach(item => {
+        item.addEventListener('click', () => {
           const monthKey = item.getAttribute('data-month');
           this.setDateFilter(monthKey);
         });
@@ -386,22 +377,16 @@ window.ViewerListManager = class ViewerListManager {
         return;
       }
 
-      const dateFilter = document.getElementById('tvm-date-filter')?.value || 'all';
-
-      // Calculate the cutoff date (1 month from now based on BOT_DATE_RANGE_MONTHS_FROM_NOW)
-      const now = new Date();
-      const cutoffDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 1 month ago
+      const dateFilter = this.currentDateFilter || 'all';
 
       container.innerHTML = topDays.map((day, index) => {
         // Extract year from dayKey (YYYY-MM-DD format)
         const [year, month, dayNum] = day.dayKey.split('-').map(Number);
         const monthKey = `${year}-${String(month).padStart(2, '0')}`;
-        const dayDate = new Date(year, month - 1, dayNum);
-        const isDisabled = (year < 2020 || dayDate > cutoffDate) ? ' disabled' : '';
         const isActive = dateFilter === monthKey ? ' active' : '';
 
         return `
-          <div class="tvm-bot-item${isDisabled}${isActive}" data-month="${monthKey}" data-disabled="${year < 2020 || dayDate > cutoffDate}">
+          <div class="tvm-bot-item${isActive}" data-month="${monthKey}">
             <span class="tvm-bot-item-label">${day.dayName}</span>
             <span class="tvm-bot-item-count">${day.count}</span>
           </div>
@@ -411,9 +396,6 @@ window.ViewerListManager = class ViewerListManager {
       // Add click handlers
       container.querySelectorAll('.tvm-bot-item').forEach(item => {
         item.addEventListener('click', () => {
-          const isDisabled = item.getAttribute('data-disabled') === 'true';
-          if (isDisabled) return; // Don't allow clicking on days before 2020 or after cutoff date
-
           const monthKey = item.getAttribute('data-month');
           this.setDateFilter(monthKey);
         });

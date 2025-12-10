@@ -210,9 +210,6 @@
                                                 <option value="createdAt">Sort by Created Date</option>
                                                 <option value="accountsOnSameDay">Sort by Same Day Count</option>
                                             </select>
-                                            <select id="tvm-date-filter" class="tvm-select">
-                                                <option value="all">All Dates</option>
-                                            </select>
                                         </div>
 
                                         <div class="tvm-list-content" id="tvm-list-content"
@@ -232,7 +229,13 @@
                                         style="width: 280px; display: flex; flex-direction: column; gap: 15px;">
                                         <!-- Top 10 Months Panel -->
                                         <div class="tvm-bot-panel">
-                                            <h3 class="tvm-bot-panel-title">Top 10 Months</h3>
+                                            <div class="tvm-bot-panel-header">
+                                                <h3 class="tvm-bot-panel-title">Top 10 Months</h3>
+                                                <button id="tvm-toggle-all-months" class="tvm-toggle-btn"
+                                                    title="Toggle between Top 10 and All Months">📅 Show All</button>
+                                            </div>
+                                            <div id="tvm-clear-date-filter-container"
+                                                style="display: none; margin-bottom: 8px;"></div>
                                             <div id="tvm-top-months-list" class="tvm-bot-list">
                                                 <p class="tvm-empty">No data available</p>
                                             </div>
@@ -240,7 +243,9 @@
 
                                         <!-- Top 25 Same Day Counts Panel -->
                                         <div class="tvm-bot-panel">
-                                            <h3 class="tvm-bot-panel-title">Top 25 Same Day Counts</h3>
+                                            <div class="tvm-bot-panel-header">
+                                                <h3 class="tvm-bot-panel-title">Top 25 Same Day Counts</h3>
+                                            </div>
                                             <div id="tvm-top-days-list" class="tvm-bot-list">
                                                 <p class="tvm-empty">No data available</p>
                                             </div>

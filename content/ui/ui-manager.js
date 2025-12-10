@@ -35,10 +35,6 @@ window.UIManager = class UIManager {
         case 'botsDetected':
           this.viewerListManager.scheduleViewerListUpdate();
           this.statsManager.updateStats();
-          // When user info is updated, we might have new creation dates
-          if (event === 'userInfoUpdated') {
-            this.viewerListManager.dateFilterNeedsUpdate = true;
-          }
           break;
         case 'historyUpdated':
           this.statsManager.updateStats();
@@ -124,7 +120,6 @@ window.UIManager = class UIManager {
       const elements = {
         search: document.getElementById('tvm-search'),
         sort: document.getElementById('tvm-sort'),
-        dateFilter: document.getElementById('tvm-date-filter'),
         prevBtn: document.getElementById('tvm-prev'),
         nextBtn: document.getElementById('tvm-next'),
         prevBtnTop: document.getElementById('tvm-prev-top'),
@@ -140,10 +135,6 @@ window.UIManager = class UIManager {
 
       if (elements.sort) {
         elements.sort.addEventListener('change', () => this.viewerListManager.onSortChange());
-      }
-
-      if (elements.dateFilter) {
-        elements.dateFilter.addEventListener('change', () => this.viewerListManager.onDateFilterChange());
       }
 
       // Pagination buttons
@@ -175,6 +166,15 @@ window.UIManager = class UIManager {
       const historyModeBtn = document.getElementById('tvm-history-mode-btn');
       if (historyModeBtn) {
         historyModeBtn.addEventListener('click', () => this.onHistoryModeButtonClick());
+      }
+
+      // Toggle all months button
+      const toggleAllMonthsBtn = document.getElementById('tvm-toggle-all-months');
+      if (toggleAllMonthsBtn) {
+        toggleAllMonthsBtn.addEventListener('click', () => {
+          this.viewerListManager.showAllMonths = !this.viewerListManager.showAllMonths;
+          this.viewerListManager.updateTopBottedMonths();
+        });
       }
 
       // Username click handlers - Use event delegation for better performance
@@ -403,15 +403,6 @@ window.UIManager = class UIManager {
       }
     } catch (error) {
       this.errorHandler?.handle(error, 'UIManager Set Pause Resume State', { isPaused });
-    }
-  }
-
-  initializeDateFilter() {
-    try {
-      // Delegate to ViewerListManager
-      this.viewerListManager.initializeDateFilter();
-    } catch (error) {
-      this.errorHandler?.handle(error, 'UIManager Initialize Date Filter');
     }
   }
 

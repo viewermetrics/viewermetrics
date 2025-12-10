@@ -2,10 +2,8 @@
 
 All notable changes to the Viewer Metrics Chrome Extension will be documented in this file.
 
-## [0.9.94] - 2025-12-09
-- Viewerlist page now shows top botted months and days
-- Percentage of accounts created after 2020 shown
-- Fixed date formatting
+## [0.9.94] - 2025-12-10
+- Performance improvements
 - Minor fixes
 
 ## [0.9.93] - 2025-12-09

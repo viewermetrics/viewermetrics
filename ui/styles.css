@@ -1819,13 +1819,37 @@
   padding: 12px;
 }
 
+.tvm-bot-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2e2e35;
+}
+
 .tvm-bot-panel-title {
   font-size: 14px;
   font-weight: 600;
   color: #efeff1;
-  margin: 0 0 10px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #2e2e35;
+  margin: 0;
+}
+
+.tvm-toggle-btn {
+  background: transparent;
+  border: 1px solid #9147ff;
+  border-radius: 4px;
+  color: #9147ff;
+  font-size: 12px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.tvm-toggle-btn:hover {
+  background: #9147ff;
+  color: #fff;
 }
 
 .tvm-bot-list {
@@ -1895,6 +1919,10 @@
 .tvm-bot-item.active {
   background: #26262c;
   border: 1px solid #9147ff;
+}
+
+.tvm-bot-item.tvm-toggle-months:hover {
+  background: #3c3c4e !important;
 }
 
 .tvm-bot-list .tvm-empty {

@@ -87,7 +87,6 @@ export class ApiManager {
 
   async processConcurrentRequests() {
     // Process requests concurrently (up to concurrentUserInfoBatches at a time)
-    console.log(`Queue has ${this.requestQueue.length} requests, using concurrent processing with ${this.concurrentUserInfoBatches} concurrent batches`);
 
     while (this.requestQueue.length > 0) {
       // Use rolling window rate limiting (matches actual requests per minute display)

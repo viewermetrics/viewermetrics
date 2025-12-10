@@ -6,6 +6,7 @@ window.MainChart = class MainChart {
     this.errorHandler = errorHandler;
     this.channelName = channelName;
     this.chart = null;
+    this.smoothLines = true; // Smooth lines enabled by default
     this.botCalculationType = 0; // 0 = Normal, 1 = High Churn
     this.skipEntries = 0; // Number of initial entries to skip from display (0-20)
   }
@@ -45,9 +46,6 @@ window.MainChart = class MainChart {
 
     const config = this.settingsManager.get();
     const colors = config.chartColors;
-
-    // Initialize smooth lines state (default on, not persisted)
-    this.smoothLines = true;
 
     this.chart = new Chart(ctx, {
       type: 'line',
@@ -439,6 +437,9 @@ window.MainChart = class MainChart {
     if (!this.chart) return;
 
     let history = this.dataManager.getHistory();
+
+    // If history is empty, don't update
+    if (!history || history.length === 0) return;
 
     // If skip is 0 and we have more than 2 history points, set it to 1
     let skipValue = this.skipEntries;
