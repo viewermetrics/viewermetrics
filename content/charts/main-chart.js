@@ -184,11 +184,8 @@ window.MainChart = class MainChart {
             callback: function (value, index, values) {
               // Format ticks to show UTC time
               const date = new Date(value);
-              return date.toLocaleTimeString('en-GB', {
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'UTC',
-                hour12: false
+              return date.toLocaleTimeString(undefined, {
+                timeZone: 'UTC'
               });
             }
           },
@@ -357,10 +354,7 @@ window.MainChart = class MainChart {
 
     // Build tooltip content from the original history point
     const date = new Date(closestPoint.timestamp);
-    const timeStr = date.toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
+    const timeStr = date.toLocaleTimeString(undefined, {
       timeZone: 'UTC'
     }) + ' UTC';
 

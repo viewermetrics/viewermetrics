@@ -1073,7 +1073,7 @@ class TrackingPageManager {
     // Update title to show analysis mode
     const titleElement = document.getElementById('tvm-tracking-title');
     if (titleElement) {
-      const exportDate = exportedAt ? new Date(exportedAt).toLocaleDateString() : 'Unknown';
+      const exportDate = exportedAt ? new Date(exportedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown';
       titleElement.textContent = `📊 Analysis Mode - ${channelName} (${exportDate})`;
       titleElement.style.color = '#ffa500'; // Orange color for analysis mode
     }

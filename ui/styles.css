@@ -1452,25 +1452,24 @@
 }
 
 .tvm-following-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
   gap: 10px;
+  margin-bottom: 10px;
 }
 
 .tvm-following-header h4 {
   margin: 0;
   color: #efeff1;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .tvm-following-controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .tvm-search-input,
@@ -1483,12 +1482,9 @@
   font-size: 12px;
 }
 
-.tvm-search-input {
-  width: 150px;
-}
-
 .tvm-sort-select {
   width: 160px;
+  flex-shrink: 0;
 }
 
 .tvm-following-grid {

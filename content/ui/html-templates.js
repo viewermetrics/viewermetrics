@@ -86,25 +86,23 @@ window.HTMLTemplates = class HTMLTemplates {
       ` : ''}
 
       <div class="tvm-user-following">
-        <div class="tvm-following-header" style="margin-bottom: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <h4 style="margin: 0; color: #efeff1; font-size: 14px; flex-shrink: 0;">Following (${followingCount} total)</h4>
-            ${followingCount > 0 ? `
-              <button id="tvm-load-full-following" class="tvm-btn tvm-btn-small" style="margin-left: auto;">
-                Open Full View
-              </button>
-            ` : ''}
-          </div>
-          ${followingList.length > 0 ? `
-            <div class="tvm-following-controls" style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
-              <input type="text" id="tvm-following-search" placeholder="Search follows..." class="tvm-search-input" style="flex: 1; min-width: 120px;">
-              <select id="tvm-following-sort" class="tvm-sort-select">
-                <option value="followedAt">Sort by Follow Date</option>
-                <option value="login">Sort by Username</option>
-              </select>
-            </div>
+        <div class="tvm-following-header">
+          <h4>Following (${followingCount} total)</h4>
+          ${followingCount > 0 ? `
+            <button id="tvm-load-full-following" class="tvm-btn tvm-btn-small">
+              Open Full View
+            </button>
           ` : ''}
         </div>
+        ${followingList.length > 0 ? `
+          <div class="tvm-following-controls">
+            <input type="text" id="tvm-following-search" placeholder="Search follows..." class="tvm-search-input">
+            <select id="tvm-following-sort" class="tvm-sort-select">
+              <option value="followedAt">Sort by Follow Date</option>
+              <option value="login">Sort by Username</option>
+            </select>
+          </div>
+        ` : ''}
         <div id="tvm-following-list">
           ${this.generateFollowingList(followingList, followingError, followingCount > 50)}
         </div>
@@ -121,11 +119,18 @@ window.HTMLTemplates = class HTMLTemplates {
       return '<p class="tvm-empty">No channels found</p>';
     }
 
-    let html = '<div class="tvm-following-grid">';
+    let html = '';
+
+    // Add notice if this is partial data
+    if (isPartialList) {
+      html += '<div style="text-align: center; margin-bottom: 10px; padding: 8px; background: rgba(145, 71, 255, 0.1); border-radius: 4px; font-size: 12px; color: #adadb8;">Showing first 50 follows. Click "Open Full View" to see all.</div>';
+    }
+
+    html += '<div class="tvm-following-grid">';
 
     for (const follow of followingList) {
       const followDateTime = new Date(follow.followedAt);
-      const followDate = followDateTime.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+      const followDate = followDateTime.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
       const avatarUrl = follow.user.profileImageURL || 'https://static-cdn.jtvnw.net/user-default-pictures-uv/41780b5a-def8-11e9-94d9-784f43822e80-profile_image-300x300.png';
 
       html += `
@@ -138,11 +143,6 @@ window.HTMLTemplates = class HTMLTemplates {
     }
 
     html += '</div>';
-
-    // Add notice if this is partial data
-    if (isPartialList) {
-      html += '<div style="text-align: center; margin-top: 10px; padding: 8px; background: rgba(145, 71, 255, 0.1); border-radius: 4px; font-size: 12px; color: #adadb8;">Showing first 50 follows. Click "Load Full List" to see all.</div>';
-    }
 
     return html;
   }

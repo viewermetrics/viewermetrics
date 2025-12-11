@@ -254,7 +254,7 @@ window.UIManager = class UIManager {
         if (dateDisplay && history.length > 0) {
           const firstEntry = history[0];
           const firstDate = new Date(firstEntry.timestamp);
-          const dateString = firstDate.toLocaleDateString('en-US', {
+          const dateString = firstDate.toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
@@ -265,10 +265,7 @@ window.UIManager = class UIManager {
         }
       } else if (historyPoint) {
         const date = new Date(historyPoint.timestamp);
-        const timeString = date.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
+        const timeString = date.toLocaleTimeString(undefined, {
           timeZone: 'UTC'
         });
         button.textContent = `Viewing data from ${timeString}`;

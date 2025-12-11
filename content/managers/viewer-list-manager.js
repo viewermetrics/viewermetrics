@@ -104,7 +104,7 @@ window.ViewerListManager = class ViewerListManager {
         if (!viewer._formattedCreatedDate) {
           const date = new Date(viewer.createdAt);
           const day = date.getDate();
-          const month = date.toLocaleDateString('en-US', { month: 'short' });
+          const month = date.toLocaleDateString(undefined, { month: 'short' });
           const year = date.getFullYear();
           viewer._formattedCreatedDate = `${day} ${month} ${year}`;
         }
