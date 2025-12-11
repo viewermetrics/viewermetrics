@@ -211,6 +211,18 @@ class ViewerPageManager {
       this.sortData(e.target.value);
     });
 
+    // Following grid click handler - Use event delegation to avoid multiple handlers
+    const grid = document.getElementById('tvm-following-grid');
+    grid.addEventListener('click', (e) => {
+      const item = e.target.closest('.tvm-following-item[data-twitch-login]');
+      if (item) {
+        const login = item.getAttribute('data-twitch-login');
+        if (login) {
+          window.open(`https://twitch.tv/${login}`, '_blank');
+        }
+      }
+    });
+
     // Cleanup on page unload
     window.addEventListener('beforeunload', async () => {
       await this.releaseLoadingLock();
@@ -459,11 +471,9 @@ class ViewerPageManager {
         </div>
       `;
 
-      // Make the entire item clickable to open profile
+      // Store login in data attribute for event delegation
       item.style.cursor = 'pointer';
-      item.addEventListener('click', () => {
-        window.open(`https://twitch.tv/${login}`, '_blank');
-      });
+      item.setAttribute('data-twitch-login', login);
 
       grid.appendChild(item);
     });
