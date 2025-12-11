@@ -256,7 +256,7 @@ window.CreationChart = class CreationChart {
     // Extract labels and data
     const labels = sortedData.map(item => {
       const date = new Date(item.month + '-01');
-      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      return date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
     });
 
     const nonBotData = sortedData.map(item => item.nonBots || 0);
@@ -353,7 +353,7 @@ window.CreationChart = class CreationChart {
       if (averagePerMonth > 0) {
         const titleElement = document.getElementById('tvm-creation-title');
         if (titleElement) {
-          titleElement.textContent = `Per Month Before ${averagePreStartAccounts} • Expected After ${maxExpectedPostStartAccounts} • ${accountsInBotRange} accounts`;
+          titleElement.textContent = `${averagePreStartAccounts} • Expected After ${maxExpectedPostStartAccounts} • ${accountsInBotRange} accounts`;
         }
       }
 

@@ -104,7 +104,7 @@ window.ViewerListManager = class ViewerListManager {
         if (!viewer._formattedCreatedDate) {
           const date = new Date(viewer.createdAt);
           const day = date.getDate();
-          const month = date.toLocaleDateString('en-US', { month: 'short' });
+          const month = date.toLocaleDateString(undefined, { month: 'short' });
           const year = date.getFullYear();
           viewer._formattedCreatedDate = `${day} ${month} ${year}`;
         }
@@ -121,11 +121,14 @@ window.ViewerListManager = class ViewerListManager {
       const bioText = viewer.description || '';
 
       const row = document.createElement('tr');
+      row.classList.add('tvm-username-clickable');
+      row.setAttribute('data-username', viewer.username);
+      row.style.cursor = 'pointer';
       row.innerHTML = `
           <td style="width: 200px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <img src="${avatarUrl}" alt="${viewer.username}" class="tvm-avatar tvm-username-clickable" data-username="${viewer.username}" style="width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; cursor: pointer;">
-              <span class="tvm-username-clickable tvm-username-link" data-username="${viewer.username}">${capitalizedUsername}</span> ${statusIcons}
+              <img src="${avatarUrl}" alt="${viewer.username}" class="tvm-avatar" style="width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;">
+              <span class="tvm-username-link">${capitalizedUsername}</span> ${statusIcons}
             </div>
           </td>
           <td style="text-align: right; vertical-align: middle;">${createdDate}</td>

@@ -581,14 +581,9 @@ class TrackingPageManager {
 
     // Properly cleanup existing tracking system before reinitializing
     if (this.trackingMetrics) {
-      // Close any open popups and destroy popup manager before destroying UI
-      if (this.trackingMetrics.uiManager && this.trackingMetrics.uiManager.popupManager) {
-        this.trackingMetrics.uiManager.popupManager.destroy();
-      }
-
-      // Clean up any orphaned popups from the DOM
-      if (window.PopupManager) {
-        window.PopupManager.cleanupOrphanedPopups();
+      // Close any open viewer detail panel before destroying UI
+      if (this.trackingMetrics.uiManager && this.trackingMetrics.uiManager.viewerDetailManager) {
+        this.trackingMetrics.uiManager.viewerDetailManager.destroy();
       }
 
       // Destroy chart manager to free up canvas elements
@@ -674,11 +669,6 @@ class TrackingPageManager {
   }
 
   async initializeTrackingSystem() {
-    // Clean up any existing popups that might be orphaned
-    if (window.PopupManager) {
-      window.PopupManager.cleanupOrphanedPopups();
-    }
-
     // Initialize the tracking system similar to content script
     const errorHandler = new window.ErrorHandler();
     const settingsManager = new window.SettingsManager(errorHandler);
@@ -1083,7 +1073,7 @@ class TrackingPageManager {
     // Update title to show analysis mode
     const titleElement = document.getElementById('tvm-tracking-title');
     if (titleElement) {
-      const exportDate = exportedAt ? new Date(exportedAt).toLocaleDateString() : 'Unknown';
+      const exportDate = exportedAt ? new Date(exportedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown';
       titleElement.textContent = `📊 Analysis Mode - ${channelName} (${exportDate})`;
       titleElement.style.color = '#ffa500'; // Orange color for analysis mode
     }

@@ -207,7 +207,7 @@ window.HeatmapChart = class HeatmapChart {
             const monthLabels = months.map(monthKey => {
                 const [year, month] = monthKey.split('-');
                 const date = new Date(year, parseInt(month) - 1);
-                const monthName = date.toLocaleString('en-US', { month: 'short' });
+                const monthName = date.toLocaleString(undefined, { month: 'short' });
                 return `${monthName} ${year}`;
             });
 

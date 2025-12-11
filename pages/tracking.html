@@ -193,6 +193,16 @@
                             <!-- Viewers Tab -->
                             <div id="tvm-tab-viewers" class="tvm-tab-panel">
                                 <div class="tvm-viewers-container" style="display: flex; gap: 15px; margin-top: 20px;">
+                                    <!-- Viewer Detail Panel -->
+                                    <div id="tvm-viewer-detail-panel" class="tvm-viewer-detail-panel"
+                                        style="display: none;">
+                                        <div class="tvm-panel-header">
+                                            <h3 class="tvm-panel-title" id="tvm-panel-title"></h3>
+                                            <button class="tvm-panel-close">&times;</button>
+                                        </div>
+                                        <div class="tvm-panel-body" id="tvm-panel-body"></div>
+                                    </div>
+
                                     <div class="tvm-viewer-list" style="flex: 1; margin-top: 0;">
                                         <div class="tvm-pagination tvm-pagination-top" id="tvm-pagination-top"
                                             style="display: none; margin-bottom: 10px;">
@@ -226,7 +236,7 @@
 
                                     <!-- Bot Stats Panels -->
                                     <div class="tvm-bot-stats-panels"
-                                        style="width: 280px; display: flex; flex-direction: column; gap: 15px;">
+                                        style="width: 240px; display: flex; flex-direction: column; gap: 15px;">
                                         <!-- Top 10 Months Panel -->
                                         <div class="tvm-bot-panel">
                                             <div class="tvm-bot-panel-header">
@@ -477,7 +487,7 @@
     <script src="../content/managers/stats-manager.js"></script>
     <script src="../content/managers/viewer-list-manager.js"></script>
     <script src="../content/managers/debug-manager.js"></script>
-    <script src="../content/ui/popup-manager.js"></script>
+    <script src="../content/ui/viewer-detail-manager.js"></script>
     <script src="../content/ui/tab-manager.js"></script>
     <script src="../content/ui/settings-ui.js"></script>
     <script src="../content/ui/ui-manager.js"></script>

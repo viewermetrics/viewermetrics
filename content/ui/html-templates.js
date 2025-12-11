@@ -24,24 +24,26 @@ window.HTMLTemplates = class HTMLTemplates {
     `;
   }
 
-  static generateLoadingPopup(username) {
+  static generateLoadingContent(username) {
     return `
-      <div class="tvm-user-popup-content">
-        <div class="tvm-user-popup-header">
-          <h3>Loading ${username}...</h3>
-          <button class="tvm-user-popup-close">&times;</button>
-        </div>
-        <div class="tvm-user-popup-body">
-          <div style="text-align: center; padding: 40px;">
-            <div class="tvm-loading-spinner"></div>
-            <p>Loading user data...</p>
-          </div>
-        </div>
+      <div style="text-align: center; padding: 40px;">
+        <div class="tvm-loading-spinner"></div>
+        <p>Loading user data...</p>
       </div>
     `;
   }
 
-  static generateFullUserPopup(viewer, userInfo, following) {
+  static generateErrorContent(username) {
+    const capitalizedUsername = FormatUtils.capitalizeUsername(username);
+    return `
+      <div class="tvm-panel-error">
+        <p>Failed to load data for ${capitalizedUsername}</p>
+        <p style="font-size: 12px; margin-top: 10px; color: #adadb8;">Click the username in the viewer list to retry</p>
+      </div>
+    `;
+  }
+
+  static generatePanelContent(viewer, userInfo, following) {
     const capitalizedUsername = FormatUtils.capitalizeUsername(viewer.username);
     const profileImage = userInfo?.profileImageURL || 'https://static-cdn.jtvnw.net/user-default-pictures-uv/41780b5a-def8-11e9-94d9-784f43822e80-profile_image-300x300.png';
     const description = viewer.description || 'No description available';
@@ -62,59 +64,47 @@ window.HTMLTemplates = class HTMLTemplates {
     const followingError = following?.error;
 
     return `
-      <div class="tvm-user-popup-content">
-        <div class="tvm-user-popup-header">
-          <h3>${capitalizedUsername}</h3>
-          <button class="tvm-user-popup-close">&times;</button>
+      <div class="tvm-user-profile" style="margin-bottom: 15px;">
+        <img src="${profileImage}" alt="${capitalizedUsername}" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #2e2e35;">
+        <div style="margin-top: 10px; font-size: 13px; line-height: 1.6;">
+          <strong>ID:</strong> ${viewer.id || 'Unknown'}<br>
+          <strong>Created:</strong> ${createdDate}<br>
+          <strong>Accounts Same Day:</strong> ${viewer.accountsOnSameDay}<br>
+          ${viewer.followingCount !== undefined ? `<strong>Following Count:</strong> ${viewer.followingCount}<br>` : ''}
+          ${viewer.isFollower !== undefined ? `<strong>Follows Channel:</strong> ${viewer.isFollower ? '✅ Yes' : '❌ No'}<br>` : ''}
+          <strong>First Seen:</strong> ${firstSeen}<br>
+          <strong>Last Seen:</strong> ${lastSeen}<br>
+          <strong>Time in Stream:</strong> ${timeInStream}
         </div>
-        <div class="tvm-user-popup-body">
-          <div class="tvm-user-profile">
-            <img src="${profileImage}" alt="${capitalizedUsername}" class="tvm-user-avatar">
-            <div class="tvm-user-details">
-              <div class="tvm-user-info">
-                <strong>ID:</strong> ${viewer.id || 'Unknown'}<br>
-                <strong>Created:</strong> ${createdDate}<br>
-                <strong>Accounts Same Day:</strong> ${viewer.accountsOnSameDay}<br>
-                ${viewer.followingCount !== undefined ? `<strong>Following Count:</strong> ${viewer.followingCount}<br>` : ''}
-                ${viewer.isFollower !== undefined ? `<strong>Follows Channel:</strong> ${viewer.isFollower ? '✅ Yes' : '❌ No'}<br>` : ''}
-              </div>
-              <div class="tvm-user-stream-info">
-                <strong>First Seen:</strong> ${firstSeen}<br>
-                <strong>Last Seen:</strong> ${lastSeen}<br>
-                <strong>Time in Stream:</strong> ${timeInStream}
-              </div>
-            </div>
-          </div>
-          
-          ${description !== 'No description available' ? `
-            <div class="tvm-user-description">
-              <strong>Description:</strong><br>
-              <div class="tvm-description-text">${description}</div>
-            </div>
-          ` : ''}
+      </div>
+      
+      ${description !== 'No description available' ? `
+        <div class="tvm-user-description" style="margin-bottom: 15px; padding: 12px; background: #1f1f23; border-radius: 4px; border-left: 3px solid #9147ff;">
+          <strong style="font-size: 13px;">Description:</strong><br>
+          <div class="tvm-description-text" style="margin-top: 6px; font-style: italic; color: #adadb8; font-size: 12px; line-height: 1.5;">${description}</div>
+        </div>
+      ` : ''}
 
-          <div class="tvm-user-following">
-            <div class="tvm-following-header">
-              <h4>Following (${followingCount} total)</h4>
-              ${followingList.length > 0 ? `
-                <div class="tvm-following-controls">
-                  <input type="text" id="tvm-following-search" placeholder="Search follows..." class="tvm-search-input">
-                  <select id="tvm-following-sort" class="tvm-sort-select">
-                    <option value="followedAt">Sort by Follow Date</option>
-                    <option value="login">Sort by Username</option>
-                  </select>
-                  ${followingCount > 50 ? `
-                    <button id="tvm-load-full-following" class="tvm-btn tvm-btn-small" style="margin-left: 8px;">
-                      Load Full List
-                    </button>
-                  ` : ''}
-                </div>
-              ` : ''}
-            </div>
-            <div class="tvm-following-list" id="tvm-following-list">
-              ${this.generateFollowingList(followingList, followingError, followingCount > 50)}
-            </div>
+      <div class="tvm-user-following">
+        <div class="tvm-following-header">
+          <h4>Following (${followingCount} total)</h4>
+          ${followingCount > 0 ? `
+            <button id="tvm-load-full-following" class="tvm-btn tvm-btn-small">
+              Open Full View
+            </button>
+          ` : ''}
+        </div>
+        ${followingList.length > 0 ? `
+          <div class="tvm-following-controls">
+            <input type="text" id="tvm-following-search" placeholder="Search follows..." class="tvm-search-input">
+            <select id="tvm-following-sort" class="tvm-sort-select">
+              <option value="followedAt">Sort by Follow Date</option>
+              <option value="login">Sort by Username</option>
+            </select>
           </div>
+        ` : ''}
+        <div id="tvm-following-list">
+          ${this.generateFollowingList(followingList, followingError, followingCount > 50)}
         </div>
       </div>
     `;
@@ -126,41 +116,33 @@ window.HTMLTemplates = class HTMLTemplates {
     }
 
     if (followingList.length === 0) {
-      return '<div class="tvm-empty">No following data available</div>';
+      return '<p class="tvm-empty">No channels found</p>';
     }
 
-    let html = '<div class="tvm-following-grid">';
+    let html = '';
+
+    // Add notice if this is partial data
+    if (isPartialList) {
+      html += '<div style="text-align: center; margin-bottom: 10px; padding: 8px; background: rgba(145, 71, 255, 0.1); border-radius: 4px; font-size: 12px; color: #adadb8;">Showing first 50 follows. Click "Open Full View" to see all.</div>';
+    }
+
+    html += '<div class="tvm-following-grid">';
 
     for (const follow of followingList) {
       const followDateTime = new Date(follow.followedAt);
-      const followDate = followDateTime.toLocaleDateString() + ' ' +
-        followDateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const followDate = followDateTime.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
       const avatarUrl = follow.user.profileImageURL || 'https://static-cdn.jtvnw.net/user-default-pictures-uv/41780b5a-def8-11e9-94d9-784f43822e80-profile_image-300x300.png';
 
-      const createdDate = follow.user.createdAt ?
-        new Date(follow.user.createdAt).toLocaleDateString() :
-        '';
-
       html += `
-        <div class="tvm-following-item" data-login="${follow.user.login}" data-followed="${follow.followedAt}">
-          <div class="tvm-following-avatar">
-            <img src="${avatarUrl}" alt="${follow.user.displayName}" class="tvm-following-user-avatar">
-          </div>
-          <div class="tvm-following-info">
-            <div class="tvm-following-name">${follow.user.displayName}</div>
-            <div class="tvm-following-date">${followDate}</div>
-            ${createdDate ? `<div class="tvm-following-created">Created: ${createdDate}</div>` : ''}
-          </div>
+        <div class="tvm-following-item" data-login="${follow.user.login}">
+          <img src="${avatarUrl}" alt="${follow.user.displayName}" class="tvm-following-avatar">
+          <div class="tvm-following-name">${follow.user.displayName}</div>
+          <div class="tvm-following-date">${followDate}</div>
         </div>
       `;
     }
 
     html += '</div>';
-
-    // Add notice if this is partial data
-    if (isPartialList) {
-      html += '<div style="text-align: center; margin-top: 10px; padding: 8px; background: rgba(145, 71, 255, 0.1); border-radius: 4px; font-size: 12px; color: #adadb8;">Showing first 50 follows. Click "Load Full List" to see all.</div>';
-    }
 
     return html;
   }

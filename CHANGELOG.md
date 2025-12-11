@@ -2,6 +2,10 @@
 
 All notable changes to the Viewer Metrics Chrome Extension will be documented in this file.
 
+## [0.9.95] - 2025-12-11
+- Viewer details popup refactored to display next to viewer list
+- Preliminary follower analysis implemented
+
 ## [0.9.94] - 2025-12-10
 - Performance improvements
 - Minor fixes

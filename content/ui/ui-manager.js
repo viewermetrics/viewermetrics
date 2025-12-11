@@ -14,7 +14,7 @@ window.UIManager = class UIManager {
     this.statsManager = new StatsManager(dataManager, settingsManager, errorHandler, apiClient);
     this.viewerListManager = new ViewerListManager(dataManager, settingsManager, errorHandler, null); // tabManager set later
     this.tabManager = new TabManager(errorHandler);
-    this.popupManager = new PopupManager(dataManager, apiClient, errorHandler);
+    this.viewerDetailManager = new ViewerDetailManager(dataManager, apiClient, errorHandler);
     this.settingsUI = new SettingsUI(settingsManager, this.statsManager, apiClient, errorHandler);
     this.debugManager = new DebugManager(dataManager, settingsManager, errorHandler);
 
@@ -64,7 +64,6 @@ window.UIManager = class UIManager {
     try {
       // Store channel name for later use
       this.channelName = channelName;
-      this.popupManager.setChannelName(channelName);
 
       // UI is already in static HTML, just reference the container
       this.uiContainer = targetElement.querySelector('.tvm-container');
@@ -192,7 +191,9 @@ window.UIManager = class UIManager {
           if (username) {
             event.preventDefault();
             event.stopPropagation();
-            this.popupManager.showUserPopup(username);
+
+            // Always show panel, even if same username (refreshes data)
+            this.viewerDetailManager.showViewerPanel(username);
           }
         }
       };
@@ -253,7 +254,7 @@ window.UIManager = class UIManager {
         if (dateDisplay && history.length > 0) {
           const firstEntry = history[0];
           const firstDate = new Date(firstEntry.timestamp);
-          const dateString = firstDate.toLocaleDateString('en-US', {
+          const dateString = firstDate.toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
@@ -264,10 +265,7 @@ window.UIManager = class UIManager {
         }
       } else if (historyPoint) {
         const date = new Date(historyPoint.timestamp);
-        const timeString = date.toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
+        const timeString = date.toLocaleTimeString(undefined, {
           timeZone: 'UTC'
         });
         button.textContent = `Viewing data from ${timeString}`;
@@ -458,11 +456,6 @@ window.UIManager = class UIManager {
       // Update stored channel name
       this.channelName = newChannelName;
 
-      // Update popup manager channel name
-      if (this.popupManager) {
-        this.popupManager.setChannelName(newChannelName);
-      }
-
       // Update stream name element in charts
       if (this.uiContainer) {
         const streamNameElement = this.uiContainer.querySelector('.tvm-stream-name');
@@ -484,9 +477,9 @@ window.UIManager = class UIManager {
       // Clean up UI
       this.removeUI();
 
-      // Clean up any open popups
-      if (this.popupManager) {
-        this.popupManager.closeUserPopup();
+      // Clean up viewer detail panel
+      if (this.viewerDetailManager) {
+        this.viewerDetailManager.destroy();
       }
 
       // Clean up event listeners and references

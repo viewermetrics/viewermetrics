@@ -270,8 +270,7 @@ body {
 .tvm-following-item:hover {
   background: #1f1f23;
   border-color: #9147ff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 12px rgba(145, 71, 255, 0.3);
 }
 
 .tvm-following-avatar {
@@ -283,7 +282,6 @@ body {
   width: 160px;
   height: 160px;
   border-radius: 8px;
-  border: 2px solid #2e2e35;
   object-fit: cover;
   transition: all 0.2s ease;
 }

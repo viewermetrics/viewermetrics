@@ -1371,7 +1371,7 @@ window.EnhancedDataManager = class DataManager {
           if (viewer.createdAt && !viewer._formattedCreatedDate) {
             const date = new Date(viewer.createdAt);
             const day = date.getDate();
-            const month = date.toLocaleDateString('en-US', { month: 'short' });
+            const month = date.toLocaleDateString(undefined, { month: 'short' });
             const year = date.getFullYear();
             viewer._formattedCreatedDate = `${day} ${month} ${year}`;
           }
@@ -1433,7 +1433,7 @@ window.EnhancedDataManager = class DataManager {
         .map(([monthKey, count]) => {
           const [year, month] = monthKey.split('-');
           const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-          const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          const monthName = date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
           return { monthKey, monthName, count, date };
         })
         .sort((a, b) => {
@@ -1484,7 +1484,7 @@ window.EnhancedDataManager = class DataManager {
       const sortedDays = Array.from(dayCounts.entries())
         .map(([dayKey, count]) => {
           const date = new Date(dayKey);
-          const dayName = date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+          const dayName = date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
           return { dayKey, dayName, count, date };
         })
         .sort((a, b) => {

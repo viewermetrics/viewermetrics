@@ -237,7 +237,7 @@ class ViewerPageManager {
     // Update stats
     document.getElementById('tvm-stat-id').textContent = data.id || 'Unknown';
     document.getElementById('tvm-stat-created').textContent = data.createdAt ?
-      new Date(data.createdAt).toLocaleDateString() : 'Unknown';
+      new Date(data.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown';
     document.getElementById('tvm-stat-first-seen').textContent =
       new Date(data.firstSeen).toLocaleString();
     document.getElementById('tvm-stat-last-seen').textContent =
@@ -430,8 +430,8 @@ class ViewerPageManager {
       const username = user.displayName || user.login || 'Unknown';
       const login = user.login || username.toLowerCase();
       const followDateTime = new Date(follow.followedAt || follow.followed_at || Date.now());
-      const followDate = followDateTime.toLocaleDateString() + ' ' +
-        followDateTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const followDate = followDateTime.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' +
+        followDateTime.toLocaleTimeString();
 
       // Avatar with loading state
       const avatarUrl = user.profileImageURL || user.profile_image_url ||
@@ -439,7 +439,7 @@ class ViewerPageManager {
 
       // Creation date with loading state
       const createdDate = user.createdAt ?
-        new Date(user.createdAt).toLocaleDateString() :
+        new Date(user.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) :
         'Loading...';
 
       // Check if user is currently streaming

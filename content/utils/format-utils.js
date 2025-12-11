@@ -33,7 +33,7 @@ window.FormatUtils = class FormatUtils {
   static formatCreatedDate(createdAt) {
     if (!createdAt) return 'Unknown';
     const date = new Date(createdAt);
-    return date.toLocaleDateString();
+    return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   static formatDateTime(timestamp) {
@@ -46,7 +46,7 @@ window.FormatUtils = class FormatUtils {
     if (!createdAt) return '-';
     const date = new Date(createdAt);
     const day = date.getDate();
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const month = date.toLocaleDateString(undefined, { month: 'short' });
     const year = date.getFullYear();
     return `${day} ${month} ${year}`;
   }
