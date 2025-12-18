@@ -1,0 +1,306 @@
+{
+    "extensionDescription": {
+        "message": "Track and analyze stream viewers with bot detection",
+        "description": "Description of the extension"
+    },
+    "switchChannel": {
+        "message": "Switch Channel",
+        "description": "####"
+    },
+    "stopTracking": {
+        "message": "Close & Stop Tracking",
+        "description": "####"
+    },
+    "btnLive": {
+        "message": "Live",
+        "description": "####"
+    },
+    "MaxPossibleViewers": {
+        "message": "Maximum possible viewers if all bots active",
+        "description": "####"
+    },
+    "btnCalcNormal": {
+        "message": "Normal",
+        "description": "####"
+    },
+    "btnCalcHigh": {
+        "message": "High Churn",
+        "description": "####"
+    },
+    "btnTabGraphs": {
+        "message": "Graphs",
+        "description": "####"
+    },
+    "btnTabViewers": {
+        "message": "Viewers",
+        "description": "####"
+    },
+    "btnTabSettings": {
+        "message": "Settings",
+        "description": "####"
+    },
+    "labelStatViewers": {
+        "message": "Viewers",
+        "description": "####"
+    },
+    "labelStatAuthenticated": {
+        "message": "Authenticated",
+        "description": "####"
+    },
+    "labelStatAuthenticatedUsers": {
+        "message": "Authenticated Users",
+        "description": "####"
+    },
+    "labelStatAuthenticatedBots": {
+        "message": "Authenticated Bots",
+        "description": "####"
+    },
+    "labelStatScanned": {
+        "message": "Scanned",
+        "description": "####"
+    },
+    "labelScannedBots": {
+        "message": "Bots",
+        "description": "####"
+    },
+    "labelScannedTotal": {
+        "message": "Total",
+        "description": "####"
+    },
+    "labelStatUsersFound": {
+        "message": "Users Found",
+        "description": "####"
+    },
+    "labelStatPending": {
+        "message": "Pending",
+        "description": "####"
+    },
+    "labelStatAvailable": {
+        "message": "Available",
+        "description": "####"
+    },
+    "labelSmoothSmoothLines": {
+        "message": "Smooth Lines",
+        "description": "####"
+    },
+    "labelSkipEntriesSkip": {
+        "message": "Skip",
+        "description": "####"
+    },
+    "labelBotThreshold": {
+        "message": "Bot Threshold",
+        "description": "####"
+    },
+    "labelHeatmapViewerDuration": {
+        "message": "Viewer Duration",
+        "description": "####"
+    },
+    "btnHeatmapReset": {
+        "message": "Reset",
+        "description": "####"
+    },
+    "labelDurationStatsBotDuration": {
+        "message": "Bot Duration",
+        "description": "####"
+    },
+    "labelStreamStatsSummary": {
+        "message": "Summary",
+        "description": "####"
+    },
+    "labelStreamStatsAfter": {
+        "message": "After 5m",
+        "description": "####"
+    },
+    "btnViewerListPrevious": {
+        "message": "Previous",
+        "description": "####"
+    },
+    "labelPageiInfoPageA": {
+        "message": "Page",
+        "description": "####"
+    },
+    "labelPageiInfoPageB": {
+        "message": "of",
+        "description": "####"
+    },
+    "labelPageiInfoPageViewers": {
+        "message": "viewers",
+        "description": "####"
+    },
+    "btnViewerListNext": {
+        "message": "Next",
+        "description": "####"
+    },
+    "labelSortSortByTime": {
+        "message": "Sort by Time",
+        "description": "####"
+    },
+    "labelSortByUsername": {
+        "message": "Sort by Username",
+        "description": "####"
+    },
+    "labelSortByCreatedDate": {
+        "message": "Sort by Created Date",
+        "description": "####"
+    },
+    "labelSortBySameDayCount": {
+        "message": "Sort by Same Day Count",
+        "description": "####"
+    },
+    "labelListContentEmptyA": {
+        "message": "No viewers tracked yet",
+        "description": "####"
+    },
+    "labelListContentEmptyB": {
+        "message": "No viewers found",
+        "description": "####"
+    },
+    "labelBotStatsMonths": {
+        "message": "Top 10 Months",
+        "description": "####"
+    },
+    "btnBotStatsShowAll": {
+        "message": "📅 Show All",
+        "description": "####"
+    },
+    "btnBotStatsShowTop": {
+        "message": "📋 Top 10",
+        "description": "####"
+    },
+    "labelNoDataAvailable": {
+        "message": "No data available",
+        "description": "####"
+    },
+    "labelBotStatsTop25Same": {
+        "message": "Top 25 Same Day Counts",
+        "description": "####"
+    },
+    "labelAutoAdjustRequest": {
+        "message": "Auto-adjust request interval based on authenticated users",
+        "description": "####"
+    },
+    "labelAutoAdjustRequestSub": {
+        "message": "&lt;1000 users: 5s, &lt;5000 users: 2s, 5000+ users: 1s",
+        "description": "####"
+    },
+    "labelCurrentEffective": {
+        "message": "Current effective interval",
+        "description": "####"
+    },
+    "labelCurrentEffectiveSeconds": {
+        "message": "seconds",
+        "description": "####"
+    },
+    "labelRequestInterval": {
+        "message": "Request Interval (seconds)",
+        "description": "####"
+    },
+    "labelAutoAdjustTimeout": {
+        "message": "Auto-adjust timeout based on authenticated users",
+        "description": "####"
+    },
+    "labelAutoAdjustTimeoutSub": {
+        "message": "Optimized for concurrent API processing: 30s-2min based on viewer count",
+        "description": "####"
+    },
+    "labelCurrentEffectiveTimeout": {
+        "message": "Current effective timeout",
+        "description": "####"
+    },
+    "labelCurrentEffectiveTimeoutSub": {
+        "message": "minutes",
+        "description": "####"
+    },
+    "labelTimeoutDuration": {
+        "message": "Timeout Duration (minutes):",
+        "description": "####"
+    },
+    "labelAutoPauseGraphsWhen": {
+        "message": "Auto-pause graphs when viewer count is 0",
+        "description": "####"
+    },
+    "labelAutoPauseGraphsWhenSub": {
+        "message": "Automatically pauses graph updates after 5 minutes when viewer count reaches 0",
+        "description": "####"
+    },
+    "labelCleanGraphData": {
+        "message": "Clean graph data",
+        "description": "####"
+    },
+    "labelCleanGraphDataSub": {
+        "message": "Remove excessive zero viewer data from graph start (keeps only 5 minutes)",
+        "description": "####"
+    },
+    "labelHistoryRetention": {
+        "message": "History Retention (hours)",
+        "description": "####"
+    },
+    "labelHistoryRetentionSub": {
+        "message": "How long to keep graph history data (1-72 hours)",
+        "description": "####"
+    },
+    "btnResetToDefaults": {
+        "message": "Reset to Defaults",
+        "description": "####"
+    },
+    "btnSaveSettings": {
+        "message": "Save Settings",
+        "description": "####"
+    },
+    "labelDebugLoading": {
+        "message": "Loading...",
+        "description": "####"
+    },
+    "labelExportTrackingData": {
+        "message": "Export Tracking Data",
+        "description": "####"
+    },
+    "labelExportTrackingDataSub": {
+        "message": "Export viewer tracking histogram data including channel, username, ID, creation date, first seen, last seen, and time in stream.",
+        "description": "####"
+    },
+    "btnCsv": {
+        "message": "CSV",
+        "description": "####"
+    },
+    "btnXml": {
+        "message": "XML",
+        "description": "####"
+    },
+    "btnSql": {
+        "message": "SQL",
+        "description": "####"
+    },
+    "btnJson": {
+        "message": "JSON",
+        "description": "####"
+    },
+    "labelExportViewerGraphData": {
+        "message": "Export Viewer Graph Data",
+        "description": "####"
+    },
+    "labelExportViewerGraphDataSub": {
+        "message": "Export viewer graph history including channel, timestamp, total viewers, total authenticated, authenticated users (non-bots), and authenticated bots.",
+        "description": "####"
+    },
+    "labelSessionSave": {
+        "message": "Session Save & Load",
+        "description": "####"
+    },
+    "labelSessionSaveSub": {
+        "message": "Save complete session for later analysis or load a previously saved session. Import stops tracking and enters read-only analysis mode.",
+        "description": "####"
+    },
+    "btnSessionSave": {
+        "message": "Save Session",
+        "description": "####"
+    },
+    "btnSessionLoad": {
+        "message": "Load Session",
+        "description": "####"
+    },
+    "labelClearFilter": {
+        "message": "✕ Clear Filter",
+        "description": "####"
+    }
+}

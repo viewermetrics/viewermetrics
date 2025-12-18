@@ -15,8 +15,8 @@
             <div class="tvm-header-content">
                 <h1 id="tvm-tracking-title">Viewer Metrics</h1>
                 <div class="tvm-header-actions">
-                    <button id="tvm-switch-channel-btn" class="tvm-btn tvm-btn-primary">Switch Channel</button>
-                    <button id="tvm-close-btn" class="tvm-btn tvm-btn-secondary">Close & Stop Tracking</button>
+                    <button id="tvm-switch-channel-btn" class="tvm-btn tvm-btn-primary" data-i18n="switchChannel"></button>
+                    <button id="tvm-close-btn" class="tvm-btn tvm-btn-secondary" data-i18n="stopTracking"></button>
                 </div>
             </div>
         </header>
@@ -28,14 +28,13 @@
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <div style="display: flex; gap: 10px; align-items: center; flex: 1;">
                                 <button id="tvm-history-mode-btn" class="tvm-tab tvm-history-mode-tab"
-                                    style="display: none;">
-                                    Live
+                                    style="display: none;" data-i18n="btnLive">
                                 </button>
                                 <div id="tvm-history-start-date" class="tvm-history-start-date" style="display: none;">
                                 </div>
                                 <div id="tvm-actual-viewers-stats"
                                     style="display: none; font-size: 18px; font-weight: 600; color: #adadb8;">
-                                    Maximum possible viewers if all bots active
+                                    <span data-i18n="MaxPossibleViewers"></span>
                                     <span id="tvm-actual-viewers" style="color:white">0</span><span
                                         id="tvm-total-viewers-ratio" style="display: none;">0</span>
                                     (<span id="tvm-viewer-percentage" style="font-weight: 700;">0%</span>)
@@ -44,15 +43,15 @@
 
                             <div class="tvm-bot-calc-toggle"
                                 style="position: absolute; left: 50%; transform: translateX(-50%); display: none;">
-                                <button class="tvm-bot-calc-btn tvm-bot-calc-active" data-calc-type="0">Normal</button>
-                                <button class="tvm-bot-calc-btn" data-calc-type="1">High Churn</button>
+                                <button class="tvm-bot-calc-btn tvm-bot-calc-active" data-calc-type="0" data-i18n="btnCalcNormal"></button>
+                                <button class="tvm-bot-calc-btn" data-calc-type="1" data-i18n="btnCalcHigh"></button>
                             </div>
 
                             <div style="display: flex; gap: 10px; align-items: center;">
                                 <div class="tvm-tabs" id="tvm-tabs" style="display: none;">
-                                    <button class="tvm-tab tvm-tab-active" data-tab="graphs">Graphs</button>
-                                    <button class="tvm-tab" data-tab="viewers">Viewers</button>
-                                    <button class="tvm-tab" data-tab="settings">Settings</button>
+                                    <button class="tvm-tab tvm-tab-active" data-tab="graphs" data-i18n="btnTabGraphs"></button>
+                                    <button class="tvm-tab" data-tab="viewers" data-i18n="btnTabViewers"></button>
+                                    <button class="tvm-tab" data-tab="settings" data-i18n="btnTabSettings"></button>
                                 </div>
                             </div>
                         </div>
@@ -61,34 +60,34 @@
                     <div id="tvm-content" class="tvm-content" style="display: none;">
                         <div class="tvm-stats">
                             <div class="tvm-stat">
-                                <span class="tvm-stat-label">Viewers</span>
+                                <span class="tvm-stat-label" data-i18n="labelStatViewers"></span>
                                 <span id="tvm-viewers" class="tvm-stat-value">0</span>
                             </div>
                             <div class="tvm-stat">
-                                <span class="tvm-stat-label">Authenticated</span>
+                                <span class="tvm-stat-label" data-i18n="labelStatAuthenticated"></span>
                                 <span id="tvm-authenticated-users" class="tvm-stat-value">0</span>
                             </div>
                             <div class="tvm-stat">
-                                <span class="tvm-stat-label">Authenticated Users</span>
+                                <span class="tvm-stat-label" data-i18n="labelStatAuthenticatedUsers"></span>
                                 <span id="tvm-non-bots" class="tvm-stat-value">0</span>
                             </div>
                             <div class="tvm-stat">
-                                <span class="tvm-stat-label">Authenticated Bots</span>
+                                <span class="tvm-stat-label" data-i18n="labelStatAuthenticatedBots"></span>
                                 <span id="tvm-bots" class="tvm-stat-value">0</span>
                             </div>
                             <div class="tvm-stat tvm-stat-scanned">
-                                <span class="tvm-stat-label">Scanned</span>
+                                <span class="tvm-stat-label" data-i18n="labelStatScanned"></span>
                                 <div id="tvm-scanned-breakdown" class="tvm-scanned-breakdown">
-                                    <div class="tvm-scanned-line">Bots: <span id="tvm-bots-count">0</span></div>
-                                    <div class="tvm-scanned-line">Total: <span id="tvm-users-count">0</span></div>
+                                    <div class="tvm-scanned-line"><span data-i18n="labelScannedBots"></span>: <span id="tvm-bots-count">0</span></div>
+                                    <div class="tvm-scanned-line"><span data-i18n="labelScannedTotal"></span>: <span id="tvm-users-count">0</span></div>
                                 </div>
                             </div>
                             <div class="tvm-stat">
                                 <span id="tvm-api-data" class="tvm-stat-value"
                                     style="font-size: 14px; line-height: 1.4;">
-                                    Users Found: <span id="tvm-authenticated">0</span><br>
-                                    Pending: <span id="tvm-pending">0</span><br>
-                                    Available: <span id="tvm-api-calls">0/5000</span>
+                                    <span data-i18n="labelStatUsersFound"></span>: <span id="tvm-authenticated">0</span><br>
+                                    <span data-i18n="labelStatPending"></span>: <span id="tvm-pending">0</span><br>
+                                    <span data-i18n="labelStatAvailable"></span>: <span id="tvm-api-calls">0/5000</span>
                                 </span>
                             </div>
                         </div>
@@ -104,7 +103,7 @@
                                         <div id="tvm-start-time" class="tvm-start-time">--</div>
                                         <div class="tvm-stream-name"></div>
                                         <div class="tvm-smooth-lines-control" id="tvm-smooth-lines-control">
-                                            <div class="tvm-smooth-lines-label">Smooth Lines</div>
+                                            <div class="tvm-smooth-lines-label" data-i18n="labelSmoothSmoothLines"></div>
                                             <label class="tvm-smooth-lines-toggle">
                                                 <input type="checkbox" id="tvm-smooth-lines-toggle" checked>
                                                 <span class="tvm-smooth-lines-slider"></span>
@@ -112,7 +111,7 @@
                                         </div>
                                         <div class="tvm-skip-entries-control" id="tvm-skip-entries-control">
                                             <div class="tvm-skip-entries-header">
-                                                <span class="tvm-skip-entries-label">Skip</span>
+                                                <span class="tvm-skip-entries-label" data-i18n="labelSkipEntriesSkip"></span>
                                                 <span class="tvm-skip-entries-value"
                                                     id="tvm-skip-entries-value">0</span>
                                             </div>
@@ -129,7 +128,7 @@
                                                 id="tvm-creation-percentage-label">2020+</span>
                                         </div>
                                         <div class="tvm-bot-threshold-control" id="tvm-bot-threshold-control">
-                                            <div class="tvm-bot-threshold-label">Bot Threshold</div>
+                                            <div class="tvm-bot-threshold-label" data-i18n="labelBotThreshold"></div>
                                             <input type="range" class="tvm-bot-threshold-slider"
                                                 id="tvm-bot-threshold-slider" min="0" max="100" value="50" disabled>
                                             <div class="tvm-bot-threshold-footer">
@@ -156,10 +155,10 @@
                                         <div class="tvm-heatmap-stats" id="tvm-heatmap-stats">
                                             <div
                                                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                                <h4 id="tvm-heatmap-stats-title" style="margin: 0;">Viewer Duration
+                                                <h4 id="tvm-heatmap-stats-title" style="margin: 0;" data-i18n="labelHeatmapViewerDuration">
                                                 </h4>
                                                 <button id="tvm-heatmap-stats-reset" class="tvm-btn tvm-btn-small"
-                                                    style="display: none; padding: 4px 8px; font-size: 11px;">Reset</button>
+                                                    style="display: none; padding: 4px 8px; font-size: 11px;" data-i18n="btnHeatmapReset"></button>
                                             </div>
                                             <div class="tvm-heatmap-stats-content" id="tvm-heatmap-stats-content">
                                                 <!-- Stats will be populated here -->
@@ -167,14 +166,14 @@
                                         </div>
                                         <div class="tvm-bot-duration-stats" id="tvm-bot-duration-stats">
                                             <div style="margin-bottom: 12px;">
-                                                <h4 style="margin: 0;">Bot Duration</h4>
+                                                <h4 style="margin: 0;" data-i18n="labelDurationStatsBotDuration"></h4>
                                             </div>
                                             <div class="tvm-heatmap-stats-content" id="tvm-bot-duration-stats-content">
                                                 <!-- Bot stats will be populated here -->
                                             </div>
                                         </div>
                                         <div class="tvm-stream-stats" id="tvm-stream-stats">
-                                            <h4 style="margin: 0 0 12px 0;">Summary</h4>
+                                            <h4 style="margin: 0 0 12px 0;" data-i18n="labelStreamStatsSummary"></h4>
                                             <div class="tvm-stream-stats-content" id="tvm-stream-stats-content">
                                                 <!-- Stream stats will be populated here -->
                                             </div>
@@ -183,7 +182,7 @@
                                                 <input type="range" id="tvm-summary-skip-slider" min="0" max="20"
                                                     value="5"
                                                     style="width: 80px; height: 4px; cursor: pointer; accent-color: #9147ff;">
-                                                <span id="tvm-summary-skip-label">After 5m</span>
+                                                <span id="tvm-summary-skip-label" data-i18n="labelStreamStatsAfter"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -206,31 +205,31 @@
                                     <div class="tvm-viewer-list" style="flex: 1; margin-top: 0;">
                                         <div class="tvm-pagination tvm-pagination-top" id="tvm-pagination-top"
                                             style="display: none; margin-bottom: 10px;">
-                                            <button id="tvm-prev-top" class="tvm-btn tvm-btn-small">Previous</button>
-                                            <span id="tvm-page-info-top">Page 1 of 1</span>
-                                            <button id="tvm-next-top" class="tvm-btn tvm-btn-small">Next</button>
+                                            <button id="tvm-prev-top" class="tvm-btn tvm-btn-small" data-i18n="btnViewerListPrevious"></button>
+                                            <span id="tvm-page-info-top"><span data-i18n="labelPageiInfoPageA"></span> 1 <span data-i18n="labelPageiInfoPageB"></span> 1</span>
+                                            <button id="tvm-next-top" class="tvm-btn tvm-btn-small" data-i18n="btnViewerListNext"></button>
                                         </div>
 
                                         <div class="tvm-list-header">
                                             <input type="text" id="tvm-search" placeholder="Search viewers..."
                                                 class="tvm-search">
                                             <select id="tvm-sort" class="tvm-select">
-                                                <option value="timeInStream">Sort by Time</option>
-                                                <option value="username">Sort by Username</option>
-                                                <option value="createdAt">Sort by Created Date</option>
-                                                <option value="accountsOnSameDay">Sort by Same Day Count</option>
+                                                <option value="timeInStream" data-i18n="labelSortSortByTime"></option>
+                                                <option value="username" data-i18n="labelSortByUsername"></option>
+                                                <option value="createdAt" data-i18n="labelSortByCreatedDate"></option>
+                                                <option value="accountsOnSameDay" data-i18n="labelSortBySameDayCount"></option>
                                             </select>
                                         </div>
 
                                         <div class="tvm-list-content" id="tvm-list-content"
                                             style="max-height: none; overflow: visible;">
-                                            <p class="tvm-empty">No viewers tracked yet</p>
+                                            <p class="tvm-empty" data-i18n="labelListContentEmptyA"></p>
                                         </div>
 
                                         <div class="tvm-pagination" id="tvm-pagination" style="display: none;">
-                                            <button id="tvm-prev" class="tvm-btn tvm-btn-small">Previous</button>
-                                            <span id="tvm-page-info">Page 1 of 1</span>
-                                            <button id="tvm-next" class="tvm-btn tvm-btn-small">Next</button>
+                                            <button id="tvm-prev" class="tvm-btn tvm-btn-small" data-i18n="btnViewerListPrevious"></button>
+                                            <span id="tvm-page-info"><span data-i18n="labelPageiInfoPageA"></span> 1 <span data-i18n="labelPageiInfoPageB"></span> 1</span>
+                                            <button id="tvm-next" class="tvm-btn tvm-btn-small" data-i18n="btnViewerListNext"></button>
                                         </div>
                                     </div>
 
@@ -240,24 +239,24 @@
                                         <!-- Top 10 Months Panel -->
                                         <div class="tvm-bot-panel">
                                             <div class="tvm-bot-panel-header">
-                                                <h3 class="tvm-bot-panel-title">Top 10 Months</h3>
+                                                <h3 class="tvm-bot-panel-title" data-i18n="labelBotStatsMonths"></h3>
                                                 <button id="tvm-toggle-all-months" class="tvm-toggle-btn"
-                                                    title="Toggle between Top 10 and All Months">📅 Show All</button>
+                                                    title="Toggle between Top 10 and All Months"><span data-i18n="btnBotStatsShowAll"></span></button>
                                             </div>
                                             <div id="tvm-clear-date-filter-container"
                                                 style="display: none; margin-bottom: 8px;"></div>
                                             <div id="tvm-top-months-list" class="tvm-bot-list">
-                                                <p class="tvm-empty">No data available</p>
+                                                <p class="tvm-empty" data-i18n="labelNoDataAvailable"></p>
                                             </div>
                                         </div>
 
                                         <!-- Top 25 Same Day Counts Panel -->
                                         <div class="tvm-bot-panel">
                                             <div class="tvm-bot-panel-header">
-                                                <h3 class="tvm-bot-panel-title">Top 25 Same Day Counts</h3>
+                                                <h3 class="tvm-bot-panel-title" data-i18n="labelBotStatsTop25Same"></h3>
                                             </div>
                                             <div id="tvm-top-days-list" class="tvm-bot-list">
-                                                <p class="tvm-empty">No data available</p>
+                                                <p class="tvm-empty" data-i18n="labelNoDataAvailable"></p>
                                             </div>
                                         </div>
                                     </div>
@@ -277,21 +276,18 @@
                                                         style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
                                                         <input type="checkbox" id="tvm-auto-adjust-request-interval">
                                                         <div>
-                                                            Auto-adjust request interval based on authenticated users
-                                                            <div style="font-size: 12px; color: #999; margin-top: 5px;">
-                                                                &lt;1000 users: 5s, &lt;5000 users: 2s, 5000+ users: 1s
+                                                            <span data-i18n="labelAutoAdjustRequest"></span>
+                                                            <div style="font-size: 12px; color: #999; margin-top: 5px;" data-i18n="labelAutoAdjustRequestSub">
                                                             </div>
                                                             <div id="tvm-effective-request-interval"
                                                                 style="font-size: 12px; color: #00ff88; margin-top: 5px; font-weight: bold; display: none;">
-                                                                Current effective interval: <span
-                                                                    id="tvm-effective-request-interval-value">--</span>
-                                                                seconds
+                                                                <span data-i18n="labelCurrentEffective"></span>: <span id="tvm-effective-request-interval-value">--</span>
+                                                                <span data-i18n="labelCurrentEffectiveSeconds"></span>
                                                             </div>
                                                         </div>
                                                     </label>
                                                     <div style="margin-left: 24px;">
-                                                        <label style="display: block; margin-bottom: 4px;">Request
-                                                            Interval (seconds):</label>
+                                                        <label style="display: block; margin-bottom: 4px;"><span data-i18n="labelRequestInterval"></span>:</label>
                                                         <input type="number" id="tvm-interval" min="1" max="60"
                                                             value="5" style="width: 120px;">
                                                     </div>
@@ -302,21 +298,16 @@
                                                         style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
                                                         <input type="checkbox" id="tvm-auto-adjust-timeout">
                                                         <div>
-                                                            Auto-adjust timeout based on authenticated users
-                                                            <div style="font-size: 12px; color: #999; margin-top: 5px;">
-                                                                Optimized for concurrent API processing: 30s-2min based
-                                                                on viewer count
-                                                            </div>
+                                                            <span data-i18n="labelAutoAdjustTimeout"></span>
+                                                            <div style="font-size: 12px; color: #999; margin-top: 5px;" data-i18n="labelAutoAdjustTimeoutSub"></div>
                                                             <div id="tvm-effective-timeout"
                                                                 style="font-size: 12px; color: #00ff88; margin-top: 5px; font-weight: bold; display: none;">
-                                                                Current effective timeout: <span
-                                                                    id="tvm-effective-timeout-value">--</span> minutes
+                                                                <span data-i18n="labelCurrentEffectiveTimeout"></span>:<span id="tvm-effective-timeout-value">--</span> <span data-i18n="labelCurrentEffectiveTimeoutSub"></span>
                                                             </div>
                                                         </div>
                                                     </label>
                                                     <div style="margin-left: 24px;">
-                                                        <label style="display: block; margin-bottom: 4px;">Timeout
-                                                            Duration (minutes):</label>
+                                                        <label style="display: block; margin-bottom: 4px;" data-i18n="labelTimeoutDuration"></label>
                                                         <input type="number" id="tvm-timeout" min="5" max="60"
                                                             value="10" style="width: 120px;">
                                                     </div>
@@ -326,11 +317,8 @@
                                                     <label style="display: flex; align-items: flex-start; gap: 8px;">
                                                         <input type="checkbox" id="tvm-auto-pause-graphs">
                                                         <div>
-                                                            Auto-pause graphs when viewer count is 0
-                                                            <div style="font-size: 12px; color: #999; margin-top: 5px;">
-                                                                Automatically pauses graph updates after 5 minutes when
-                                                                viewer count reaches 0
-                                                            </div>
+                                                            <span data-i18n="labelAutoPauseGraphsWhen"></span>
+                                                            <div style="font-size: 12px; color: #999; margin-top: 5px;" data-i18n="labelAutoPauseGraphsWhenSub"></div>
                                                         </div>
                                                     </label>
                                                 </div>
@@ -339,31 +327,24 @@
                                                     <label style="display: flex; align-items: flex-start; gap: 8px;">
                                                         <input type="checkbox" id="tvm-clean-graph-zero-data">
                                                         <div>
-                                                            Clean graph data
-                                                            <div style="font-size: 12px; color: #999; margin-top: 5px;">
-                                                                Remove excessive zero viewer data from graph start
-                                                                (keeps only 5 minutes)
-                                                            </div>
+                                                            <span data-i18n="labelCleanGraphData"></span>
+                                                            <div style="font-size: 12px; color: #999; margin-top: 5px;" data-i18n="labelCleanGraphDataSub"></div>
                                                         </div>
                                                     </label>
                                                 </div>
 
                                                 <div style="margin-bottom: 20px;">
                                                     <label style="display: block; margin-bottom: 8px;">
-                                                        History Retention (hours)
-                                                        <div style="font-size: 12px; color: #999; margin-top: 5px;">
-                                                            How long to keep graph history data (1-72 hours)
-                                                        </div>
+                                                        <span data-i18n="labelHistoryRetention"></span>
+                                                        <div style="font-size: 12px; color: #999; margin-top: 5px;" data-i18n="labelHistoryRetentionSub"></div>
                                                     </label>
                                                     <input type="number" id="tvm-history-retention" min="1" max="72"
                                                         value="12" style="width: 120px;">
                                                 </div>
 
                                                 <div style="display: flex; gap: 10px; align-items: center;">
-                                                    <button id="tvm-reset-settings"
-                                                        class="tvm-btn tvm-btn-secondary">Reset to Defaults</button>
-                                                    <button id="tvm-save-settings" class="tvm-btn tvm-btn-primary">Save
-                                                        Settings</button>
+                                                    <button id="tvm-reset-settings" class="tvm-btn tvm-btn-secondary" data-i18n="btnResetToDefaults"></button>
+                                                    <button id="tvm-save-settings" class="tvm-btn tvm-btn-primary" data-i18n="btnSaveSettings"></button>
                                                 </div>
                                             </div>
                                         </div>
@@ -374,34 +355,21 @@
                                         <div class="tvm-debug" style="font-size: 12px; color: #666;">
                                             <div id="tvm-debug-panel"
                                                 style="padding: 10px; background: rgba(0,0,0,0.2); border-radius: 4px;">
-                                                <div id="tvm-debug-content">Loading...</div>
+                                                <div id="tvm-debug-content" data-i18n="labelDebugLoading"></div>
                                             </div>
                                         </div>
 
                                         <!-- Export Panel - Tracking Data -->
                                         <div class="tvm-settings" style="margin-top: 20px;">
                                             <div class="tvm-settings-panel">
-                                                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #efeff1;">Export
-                                                    Tracking Data</h3>
-                                                <div style="font-size: 12px; color: #adadb8; margin-bottom: 15px;">
-                                                    Export viewer tracking histogram data including channel, username,
-                                                    ID,
-                                                    creation date, first seen, last seen, and time in stream.
-                                                </div>
+                                                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #efeff1;" data-i18n="labelExportTrackingData"></h3>
+                                                <div style="font-size: 12px; color: #adadb8; margin-bottom: 15px;" data-i18n="labelExportTrackingDataSub"></div>
                                                 <div
                                                     style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                                                    <button id="tvm-export-csv" class="tvm-btn tvm-btn-primary">
-                                                        CSV
-                                                    </button>
-                                                    <button id="tvm-export-xml" class="tvm-btn tvm-btn-primary">
-                                                        XML
-                                                    </button>
-                                                    <button id="tvm-export-sql" class="tvm-btn tvm-btn-primary">
-                                                        SQL
-                                                    </button>
-                                                    <button id="tvm-export-json" class="tvm-btn tvm-btn-primary">
-                                                        JSON
-                                                    </button>
+                                                    <button id="tvm-export-csv" class="tvm-btn tvm-btn-primary" data-i18n="btnCsv"></button>
+                                                    <button id="tvm-export-xml" class="tvm-btn tvm-btn-primary" data-i18n="btnXml"></button>
+                                                    <button id="tvm-export-sql" class="tvm-btn tvm-btn-primary" data-i18n="btnSql"></button>
+                                                    <button id="tvm-export-json" class="tvm-btn tvm-btn-primary" data-i18n="btnJson"></button>
                                                 </div>
                                             </div>
                                         </div>
@@ -409,27 +377,14 @@
                                         <!-- Export Panel - Viewer Graph -->
                                         <div class="tvm-settings" style="margin-top: 20px;">
                                             <div class="tvm-settings-panel">
-                                                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #efeff1;">Export
-                                                    Viewer Graph Data</h3>
-                                                <div style="font-size: 12px; color: #adadb8; margin-bottom: 15px;">
-                                                    Export viewer graph history including channel, timestamp, total
-                                                    viewers, total authenticated, authenticated users (non-bots), and
-                                                    authenticated bots.
-                                                </div>
+                                                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #efeff1;" data-i18n="labelExportViewerGraphData"></h3>
+                                                <div style="font-size: 12px; color: #adadb8; margin-bottom: 15px;" data-i18n="labelExportViewerGraphDataSub"></div>
                                                 <div
                                                     style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                                                    <button id="tvm-export-graph-csv" class="tvm-btn tvm-btn-primary">
-                                                        CSV
-                                                    </button>
-                                                    <button id="tvm-export-graph-xml" class="tvm-btn tvm-btn-primary">
-                                                        XML
-                                                    </button>
-                                                    <button id="tvm-export-graph-sql" class="tvm-btn tvm-btn-primary">
-                                                        SQL
-                                                    </button>
-                                                    <button id="tvm-export-graph-json" class="tvm-btn tvm-btn-primary">
-                                                        JSON
-                                                    </button>
+                                                    <button id="tvm-export-graph-csv" class="tvm-btn tvm-btn-primary" data-i18n="btnCsv"></button>
+                                                    <button id="tvm-export-graph-xml" class="tvm-btn tvm-btn-primary" data-i18n="btnXml"></button>
+                                                    <button id="tvm-export-graph-sql" class="tvm-btn tvm-btn-primary" data-i18n="btnSql"></button>
+                                                    <button id="tvm-export-graph-json" class="tvm-btn tvm-btn-primary" data-i18n="btnJson"></button>
                                                 </div>
                                             </div>
                                         </div>
@@ -437,21 +392,12 @@
                                         <!-- Export/Import Panel - Full State -->
                                         <div class="tvm-settings" style="margin-top: 20px;">
                                             <div class="tvm-settings-panel">
-                                                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #efeff1;">Session
-                                                    Save & Load</h3>
-                                                <div style="font-size: 12px; color: #adadb8; margin-bottom: 15px;">
-                                                    Save complete session for later analysis or load a previously saved
-                                                    session. Import stops tracking and enters read-only analysis mode.
-                                                </div>
+                                                <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #efeff1;" data-i18n="labelSessionSave"></h3>
+                                                <div style="font-size: 12px; color: #adadb8; margin-bottom: 15px;" data-i18n="labelSessionSaveSub"></div>
                                                 <div
                                                     style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                                                    <button id="tvm-export-full-state" class="tvm-btn tvm-btn-primary">
-                                                        Save Session
-                                                    </button>
-                                                    <button id="tvm-import-full-state"
-                                                        class="tvm-btn tvm-btn-secondary">
-                                                        Load Session
-                                                    </button>
+                                                    <button id="tvm-export-full-state" class="tvm-btn tvm-btn-primary" data-i18n="btnSessionSave"></button>
+                                                    <button id="tvm-import-full-state" class="tvm-btn tvm-btn-secondary" data-i18n="btnSessionLoad"></button>
                                                     <input type="file" id="tvm-import-file-input" accept=".json"
                                                         style="display: none;">
                                                 </div>
@@ -492,6 +438,7 @@
     <script src="../content/ui/settings-ui.js"></script>
     <script src="../content/ui/ui-manager.js"></script>
     <script src="tracking.js"></script>
+    <script src="../content/core/i18n.js"></script>
 </body>
 
 </html>

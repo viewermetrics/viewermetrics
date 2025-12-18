@@ -1,6 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Viewer Metrics",
+  "default_locale": "en",
   "version": "0.9.951",
   "description": "Track and analyze stream viewers with bot detection",
   "permissions": [

@@ -55,6 +55,10 @@ window.UIManager = class UIManager {
           this.debugManager.updateDebugInfo();
           break;
       }
+      //I'll put the update here temporarily.
+      document.querySelectorAll('[data-i18nDynamic]').forEach((e) => {
+          e.innerHTML = getMessage(e.getAttribute('data-i18nDynamic'));
+      });
     } catch (error) {
       this.errorHandler?.handle(error, 'UIManager Data Change Handler', { event, data });
     }
@@ -173,6 +177,9 @@ window.UIManager = class UIManager {
         toggleAllMonthsBtn.addEventListener('click', () => {
           this.viewerListManager.showAllMonths = !this.viewerListManager.showAllMonths;
           this.viewerListManager.updateTopBottedMonths();
+          document.querySelectorAll('[data-i18nDynamic]').forEach((e) => {
+              e.innerHTML = getMessage(e.getAttribute('data-i18nDynamic'));
+          });
         });
       }
 
