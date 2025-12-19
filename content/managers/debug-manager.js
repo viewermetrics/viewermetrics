@@ -13,25 +13,25 @@ window.DebugManager = class DebugManager {
 
       const debugInfo = await this.dataManager.getDebugInfo();
       const html = `
-        <div><strong>Debug Information:</strong></div>
-        <div>Users Found: ${debugInfo.viewerCount}</div>
-        <div>History Points: ${debugInfo.historyPoints}</div>
-        <div>Pending Info: ${debugInfo.pendingInfo}</div>
-        <div>Observers: ${debugInfo.observerCount}</div>
-        <div>Session Duration: ${FormatUtils.formatDuration(debugInfo.sessionDuration)}</div>
-        <div>Last Updated: ${debugInfo.lastUpdated ? new Date(debugInfo.lastUpdated).toLocaleTimeString() : 'Never'}</div>
-        <div><strong>Description Stats:</strong></div>
-        <div>Users with descriptions: ${debugInfo.descriptionStats.withDescriptions} / ${debugInfo.descriptionStats.withData} (${debugInfo.descriptionStats.descriptionPercentage}%)</div>
-        <div>Users without descriptions: ${debugInfo.descriptionStats.withoutDescriptions}</div>
-        <div><strong>API Data Usage:</strong></div>
-        <div>Total API Calls: ${debugInfo.dataUsage.totalApiCalls}</div>
-        <div>Total Sent: ${debugInfo.dataUsage.totalSent}</div>
-        <div>Total Received: ${debugInfo.dataUsage.totalReceived}</div>
-        <div>Last Minute Sent: ${debugInfo.dataUsage.lastMinuteSent}</div>
-        <div>Last Minute Received: ${debugInfo.dataUsage.lastMinuteReceived}</div>
+        <div><strong>${getMessage("labelDebugInformation")}:</strong></div>
+        <div>${getMessage("labelDebugUsersFound")}: ${debugInfo.viewerCount}</div>
+        <div>${getMessage("labelDebugHistoryPoints")}: ${debugInfo.historyPoints}</div>
+        <div>${getMessage("labelDebugPendingInfo")}: ${debugInfo.pendingInfo}</div>
+        <div>${getMessage("labelDebugObservers")}: ${debugInfo.observerCount}</div>
+        <div>${getMessage("labelDebugSessionDuration")}: ${FormatUtils.formatDuration(debugInfo.sessionDuration)}</div>
+        <div>${getMessage("labelDebugLastUpdated")}: ${debugInfo.lastUpdated ? new Date(debugInfo.lastUpdated).toLocaleTimeString() : getMessage("labelDebugLastUpdatedSub")}</div>
+        <div><strong>${getMessage("labelDebugDescriptionStats")}:</strong></div>
+        <div>${getMessage("labelDebugUsersWith")}: ${debugInfo.descriptionStats.withDescriptions} / ${debugInfo.descriptionStats.withData} (${debugInfo.descriptionStats.descriptionPercentage}%)</div>
+        <div>${getMessage("labelDebugUsersWithout")}: ${debugInfo.descriptionStats.withoutDescriptions}</div>
+        <div><strong>${getMessage("labelDebugApiData")}:</strong></div>
+        <div>${getMessage("labelDebugTotalApi")}: ${debugInfo.dataUsage.totalApiCalls}</div>
+        <div>${getMessage("labelDebugTotalSent")}: ${debugInfo.dataUsage.totalSent}</div>
+        <div>${getMessage("labelDebugLastSent")}: ${debugInfo.dataUsage.totalReceived}</div>
+        <div>${getMessage("labelDebugLastReceived")}: ${debugInfo.dataUsage.lastMinuteSent}</div>
+        <div>${getMessage("labelDebugRequests")}: ${debugInfo.dataUsage.lastMinuteReceived}</div>
         <div>Requests/min: ${debugInfo.dataUsage.requestsLastMinute}</div>
         <div style="margin-top: 10px; text-align: right;">
-          <button id="tvm-clear-storage-btn" class="tvm-btn tvm-btn-danger" style="font-size: 10px; padding: 4px 8px;">Clear Local Storage</button>
+          <button id="tvm-clear-storage-btn" class="tvm-btn tvm-btn-danger" style="font-size: 10px; padding: 4px 8px;">${getMessage("btnDebugClearLocal")}</button>
         </div>
       `;
 

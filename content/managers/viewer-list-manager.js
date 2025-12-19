@@ -52,7 +52,7 @@ window.ViewerListManager = class ViewerListManager {
       if (!listContent || !pagination || !paginationTop) return;
 
       if (result.viewers.length === 0) {
-        listContent.innerHTML = '<p class="tvm-empty">No viewers found</p>';
+        listContent.innerHTML = `<p class="tvm-empty">${getMessage("labelListContentEmptyB")}</p>`;
         pagination.style.display = 'none';
         paginationTop.style.display = 'none';
         return;
@@ -156,7 +156,7 @@ window.ViewerListManager = class ViewerListManager {
       const prevBtn = document.getElementById('tvm-prev');
       const nextBtn = document.getElementById('tvm-next');
 
-      if (pageInfo) pageInfo.textContent = `Page ${result.currentPage} of ${result.totalPages} (${result.totalUsersFound} viewers)`;
+      if (pageInfo) pageInfo.textContent = `${getMessage("labelPageiInfoPageA")} ${result.currentPage} ${getMessage("labelPageiInfoPageB")} ${result.totalPages} (${result.totalUsersFound} ${getMessage("labelPageiInfoPageViewers")})`;
       if (prevBtn) prevBtn.disabled = !result.hasPrevPage;
       if (nextBtn) nextBtn.disabled = !result.hasNextPage;
 
@@ -166,7 +166,7 @@ window.ViewerListManager = class ViewerListManager {
       const prevBtnTop = document.getElementById('tvm-prev-top');
       const nextBtnTop = document.getElementById('tvm-next-top');
 
-      if (pageInfoTop) pageInfoTop.textContent = `Page ${result.currentPage} of ${result.totalPages} (${result.totalUsersFound} viewers)`;
+      if (pageInfoTop) pageInfoTop.textContent = `${getMessage("labelPageiInfoPageA")} ${result.currentPage} ${getMessage("labelPageiInfoPageB")} ${result.totalPages} (${result.totalUsersFound} ${getMessage("labelPageiInfoPageViewers")})`;
       if (prevBtnTop) prevBtnTop.disabled = !result.hasPrevPage;
       if (nextBtnTop) nextBtnTop.disabled = !result.hasNextPage;
     } else {
@@ -265,11 +265,11 @@ window.ViewerListManager = class ViewerListManager {
       const daysContainer = document.getElementById('tvm-top-days-list');
 
       if (monthsContainer) {
-        monthsContainer.innerHTML = '<p class="tvm-empty">No data available</p>';
+        monthsContainer.innerHTML = `<p class="tvm-empty">${getMessage("labelNoDataAvailable")}</p>`;
       }
 
       if (daysContainer) {
-        daysContainer.innerHTML = '<p class="tvm-empty">No data available</p>';
+        daysContainer.innerHTML = `<p class="tvm-empty">${getMessage("labelNoDataAvailable")}</p>`;
       }
     } catch (error) {
       this.errorHandler?.handle(error, 'ViewerListManager Clear Bot Stats Panels');
@@ -298,7 +298,7 @@ window.ViewerListManager = class ViewerListManager {
       const allMonths = this.dataManager.getTopBottedMonths(limit);
 
       if (allMonths.length === 0) {
-        container.innerHTML = '<p class="tvm-empty">No data available</p>';
+        container.innerHTML = `<p class="tvm-empty">${getMessage("labelNoDataAvailable")}</p>`;
         return;
       }
 
@@ -312,7 +312,7 @@ window.ViewerListManager = class ViewerListManager {
       // Update toggle button text
       const toggleBtn = document.getElementById('tvm-toggle-all-months');
       if (toggleBtn) {
-        toggleBtn.textContent = this.showAllMonths ? '📋 Top 10' : '📅 Show All';
+        toggleBtn.textContent = this.showAllMonths ? `${getMessage("btnBotStatsShowTop")}` : `${getMessage("btnBotStatsShowAll")}`;
       }
 
       // Render clear filter button in separate container (outside scroll area)
@@ -322,7 +322,7 @@ window.ViewerListManager = class ViewerListManager {
           clearFilterContainer.style.display = 'block';
           clearFilterContainer.innerHTML = `
             <div class="tvm-bot-item" id="tvm-clear-date-filter" style="cursor: pointer; background: #2c2c3e; border-left: 3px solid #00b8d4;">
-              <span class="tvm-bot-item-label">✕ Clear Filter</span>
+              <span class="tvm-bot-item-label">${getMessage("labelClearFilter")}</span>
               <span class="tvm-bot-item-count"></span>
             </div>
           `;
@@ -376,7 +376,7 @@ window.ViewerListManager = class ViewerListManager {
       const topDays = this.dataManager.getTopSameDayCounts(25);
 
       if (topDays.length === 0) {
-        container.innerHTML = '<p class="tvm-empty">No data available</p>';
+        container.innerHTML = `<p class="tvm-empty">${getMessage("labelNoDataAvailable")}</p>`;
         return;
       }
 
