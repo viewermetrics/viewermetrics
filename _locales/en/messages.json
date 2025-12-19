@@ -251,6 +251,82 @@
         "message": "Loading...",
         "description": "####"
     },
+    "labelDebugInformation": {
+        "message": "Debug Information",
+        "description": "####"
+    },
+    "labelDebugUsersFound": {
+        "message": "Users Found",
+        "description": "####"
+    },
+    "labelDebugHistoryPoints": {
+        "message": "History Points",
+        "description": "####"
+    },
+    "labelDebugPendingInfo": {
+        "message": "Pending Info",
+        "description": "####"
+    },
+    "labelDebugObservers": {
+        "message": "Observers",
+        "description": "####"
+    },
+    "labelDebugSessionDuration": {
+        "message": "Session Duration",
+        "description": "####"
+    },
+    "labelDebugLastUpdated": {
+        "message": "Last Updated",
+        "description": "####"
+    },
+    "labelDebugLastUpdatedSub": {
+        "message": "Never",
+        "description": "####"
+    },
+    "labelDebugDescriptionStats": {
+        "message": "Description Stats",
+        "description": "####"
+    },
+    "labelDebugUsersWith": {
+        "message": "Users with descriptions",
+        "description": "####"
+    },
+    "labelDebugUsersWithout": {
+        "message": "Users without descriptions",
+        "description": "####"
+    },
+    "labelDebugApiData": {
+        "message": "API Data Usage",
+        "description": "####"
+    },
+    "labelDebugTotalApi": {
+        "message": "Total API Calls",
+        "description": "####"
+    },
+    "labelDebugTotalSent": {
+        "message": "Total Sent",
+        "description": "####"
+    },
+    "labelDebugTotalReceived": {
+        "message": "Total Received",
+        "description": "####"
+    },
+    "labelDebugLastSent": {
+        "message": "Last Minute Sent",
+        "description": "####"
+    },
+    "labelDebugLastReceived": {
+        "message": "Last Minute Received",
+        "description": "####"
+    },
+    "labelDebugRequests": {
+        "message": "Requests/min",
+        "description": "####"
+    },
+    "btnDebugClearLocal": {
+        "message": "Clear Local Storage.",
+        "description": "####"
+    },
     "labelExportTrackingData": {
         "message": "Export Tracking Data",
         "description": "####"
@@ -301,6 +377,198 @@
     },
     "labelClearFilter": {
         "message": "✕ Clear Filter",
+        "description": "####"
+    },
+    "labelViewerLoading": {
+        "message": "Loading...",
+        "description": "####"
+    },
+    "labelViewerCloseTab": {
+        "message": "Close Tab",
+        "description": "####"
+    },
+    "labelViewerUserId": {
+        "message": "User ID",
+        "description": "####"
+    },
+    "labelViewerAccountCreated": {
+        "message": "Account Created",
+        "description": "####"
+    },
+    "labelViewerFirstSeen": {
+        "message": "First Seen",
+        "description": "####"
+    },
+    "labelViewerLastSeen": {
+        "message": "Last Seen",
+        "description": "####"
+    },
+    "labelViewerTimeStream": {
+        "message": "Time in Stream",
+        "description": "####"
+    },
+    "labelViewerFollowingCount": {
+        "message": "Following Count",
+        "description": "####"
+    },
+    "labelViewerDescription": {
+        "message": "Description",
+        "description": "####"
+    },
+    "labelViewerFollowingList": {
+        "message": "Following List",
+        "description": "####"
+    },
+    "labelViewerSortNewestDate": {
+        "message": "Sort by Follow Date (Newest)",
+        "description": "####"
+    },
+    "labelViewerSortOldestDate": {
+        "message": "Sort by Follow Date (Oldest)",
+        "description": "####"
+    },
+    "labelViewerSortLiveUsername": {
+        "message": "Sort by Live + Username (A-Z)",
+        "description": "####"
+    },
+    "labelViewerSortUsername": {
+        "message": "Sort by Username (A-Z)",
+        "description": "####"
+    },
+    "labelViewerSortDescUsername": {
+        "message": "Sort by Username (Z-A)",
+        "description": "####"
+    },
+    "labelViewerLoadingText": {
+        "message": "Loading",
+        "description": "####"
+    },
+    "labelViewerLoadingTextUsername": {
+        "message": "username",
+        "description": "####"
+    },
+    "labelViewerLoadingTextFollow": {
+        "message": "follow list...",
+        "description": "####"
+    },
+    "labelViewerErrorText": {
+        "message": "Failed to load following data",
+        "description": "####"
+    },
+    "labelHeaderTitle": {
+        "message": "Viewer Metrics",
+        "description": "####"
+    },
+    "labelHeaderTitleSub": {
+        "message": "Track and analyze viewers for",
+        "description": "####"
+    },
+    "btnHeaderStartTracking": {
+        "message": "Start Tracking",
+        "description": "####"
+    },
+    "labelLoadingUserData": {
+        "message": "Loading user data...",
+        "description": "####"
+    },
+    "labelFailedLoadingData": {
+        "message": "Failed to load data for",
+        "description": "####"
+    },
+    "labelClickUsernameViewer": {
+        "message": "Click the username in the viewer list to retry",
+        "description": "####"
+    },
+    "labelNoDescriptionAvailable": {
+        "message": "No description available",
+        "description": "####"
+    },
+    "labelUserProfileId": {
+        "message": "ID",
+        "description": "####"
+    },
+    "labelUserProfileIdSub": {
+        "message": "Unknown",
+        "description": "####"
+    },
+    "labelUserProfileCreated": {
+        "message": "Created",
+        "description": "####"
+    },
+    "labelUserProfileAccounts": {
+        "message": "Accounts Same Day",
+        "description": "####"
+    },
+    "labelUserProfileDescription": {
+        "message": "Description",
+        "description": "####"
+    },
+    "labelUserProfileFollowing": {
+        "message": "Following Count",
+        "description": "####"
+    },
+    "labelUserProfileFollowsChannel": {
+        "message": "Follows Channel",
+        "description": "####"
+    },
+    "labelUserProfileFollowsChannelYes": {
+        "message": "✅ Yes",
+        "description": "####"
+    },
+    "labelUserProfileFollowsChannelNo": {
+        "message": "❌ No",
+        "description": "####"
+    },
+    "labelUserProfileFollowingFirst": {
+        "message": "First Seen",
+        "description": "####"
+    },
+    "labelUserProfileFollowingLast": {
+        "message": "Last Seen",
+        "description": "####"
+    },
+    "labelUserProfileTime": {
+        "message": "Time in Stream",
+        "description": "####"
+    },
+    "labelUserProfileNoDescription": {
+        "message": "No description available",
+        "description": "####"
+    },
+    "labelUserfollowingfollowing": {
+        "message": "following",
+        "description": "####"
+    },
+    "labelUserfollowingfollowingSub": {
+        "message": "total",
+        "description": "####"
+    },
+    "btnUserfollowingOpenFullView": {
+        "message": "Open Full View",
+        "description": "####"
+    },
+    "labelFollowingControlsSearchFollows": {
+        "message": "Search follows...",
+        "description": "####"
+    },
+    "labelFollowingControlsSortDate": {
+        "message": "Sort by Follow Date",
+        "description": "####"
+    },
+    "labelFollowingControlsSortUsername": {
+        "message": "Sort by Username",
+        "description": "####"
+    },
+    "labelErrorLoadingFollowingData": {
+        "message": "Error loading following data",
+        "description": "####"
+    },
+    "labelNoChannelsFound": {
+        "message": "No channels found",
+        "description": "####"
+    },
+    "labelShowingFirst50Follows": {
+        "message": "Showing first 50 follows. Click \"Open Full View\" to see all.",
         "description": "####"
     }
 }

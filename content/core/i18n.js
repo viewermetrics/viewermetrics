@@ -12,7 +12,4 @@ window.addEventListener("load", () => {
     document.querySelectorAll('[data-i18n]').forEach((e) => {
         e.innerHTML = getMessage(e.getAttribute('data-i18n'));
     });
-    document.querySelectorAll('[data-i18nDynamic]').forEach((e) => {
-        e.innerHTML = getMessage(e.getAttribute('data-i18nDynamic'));
-    });
 });

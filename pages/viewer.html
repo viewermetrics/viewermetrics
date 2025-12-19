@@ -12,9 +12,9 @@
     <div class="tvm-viewer-container">
         <header class="tvm-viewer-header">
             <div class="tvm-header-content">
-                <h1 id="tvm-viewer-title">Loading...</h1>
+                <h1 id="tvm-viewer-title" data-i18n="labelViewerLoading"></h1>
                 <div class="tvm-header-actions">
-                    <button id="tvm-close-btn" class="tvm-btn tvm-btn-secondary">Close Tab</button>
+                    <button id="tvm-close-btn" class="tvm-btn tvm-btn-secondary" data-i18n="labelViewerCloseTab"></button>
                 </div>
             </div>
         </header>
@@ -27,30 +27,30 @@
                         <img id="tvm-profile-image" src="" alt="Profile" class="tvm-avatar-large">
                     </div>
                     <div class="tvm-profile-info">
-                        <h2 id="tvm-profile-username">Loading...</h2>
+                        <h2 id="tvm-profile-username" data-i18n="labelViewerLoading"></h2>
                         <div class="tvm-profile-stats">
                             <div class="tvm-stat-item">
-                                <span class="tvm-stat-label">User ID</span>
+                                <span class="tvm-stat-label" data-i18n="labelViewerUserId"></span>
                                 <span id="tvm-stat-id" class="tvm-stat-value">-</span>
                             </div>
                             <div class="tvm-stat-item">
-                                <span class="tvm-stat-label">Account Created</span>
+                                <span class="tvm-stat-label" data-i18n="labelViewerAccountCreated"></span>
                                 <span id="tvm-stat-created" class="tvm-stat-value">-</span>
                             </div>
                             <div class="tvm-stat-item">
-                                <span class="tvm-stat-label">First Seen</span>
+                                <span class="tvm-stat-label" data-i18n="labelViewerFirstSeen"></span>
                                 <span id="tvm-stat-first-seen" class="tvm-stat-value">-</span>
                             </div>
                             <div class="tvm-stat-item">
-                                <span class="tvm-stat-label">Last Seen</span>
+                                <span class="tvm-stat-label" data-i18n="labelViewerLastSeen"></span>
                                 <span id="tvm-stat-last-seen" class="tvm-stat-value">-</span>
                             </div>
                             <div class="tvm-stat-item">
-                                <span class="tvm-stat-label">Time in Stream</span>
+                                <span class="tvm-stat-label" data-i18n="labelViewerTimeStream"></span>
                                 <span id="tvm-stat-time-stream" class="tvm-stat-value">-</span>
                             </div>
                             <div class="tvm-stat-item">
-                                <span class="tvm-stat-label">Following Count</span>
+                                <span class="tvm-stat-label" data-i18n="labelViewerFollowingCount"></span>
                                 <span id="tvm-stat-following-count" class="tvm-stat-value">-</span>
                             </div>
                         </div>
@@ -58,7 +58,7 @@
                 </div>
 
                 <div id="tvm-profile-description" class="tvm-profile-description" style="display: none;">
-                    <h3>Description</h3>
+                    <h3 data-i18n="labelViewerDescription"></h3>
                     <p id="tvm-description-text"></p>
                 </div>
             </section>
@@ -66,26 +66,26 @@
             <!-- Following List Section -->
             <section class="tvm-following-section">
                 <div class="tvm-following-header">
-                    <h2>Following List</h2>
+                    <h2 data-i18n="labelViewerFollowingList"></h2>
                     <div class="tvm-following-controls">
                         <input type="text" id="tvm-search" placeholder="Search following..." class="tvm-search-input">
                         <select id="tvm-sort" class="tvm-sort-select">
-                            <option value="followedAt">Sort by Follow Date (Newest)</option>
-                            <option value="followedAt-asc">Sort by Follow Date (Oldest)</option>
-                            <option value="live-username">Sort by Live + Username (A-Z)</option>
-                            <option value="login">Sort by Username (A-Z)</option>
-                            <option value="login-desc">Sort by Username (Z-A)</option>
+                            <option value="followedAt" data-i18n="labelViewerSortNewestDate"></option>
+                            <option value="followedAt-asc" data-i18n="labelViewerSortOldestDate"></option>
+                            <option value="live-username" data-i18n="labelViewerSortLiveUsername"></option>
+                            <option value="login" data-i18n="labelViewerSortUsername"></option>
+                            <option value="login-desc" data-i18n="labelViewerSortDescUsername"></option>
                         </select>
                     </div>
                 </div>
 
                 <div id="tvm-loading" class="tvm-loading-container">
                     <div class="tvm-loading-spinner"></div>
-                    <p id="tvm-loading-text">Loading <span id="tvm-loading-username">username</span> follow list...</p>
+                    <p id="tvm-loading-text"><span data-i18n="labelViewerLoadingText"></span> <span id="tvm-loading-username" data-i18n="labelViewerLoadingTextUsername">username</span> <span data-i18n="labelViewerLoadingTextFollow"></span></p>
                 </div>
 
                 <div id="tvm-error" class="tvm-error-container" style="display: none;">
-                    <p id="tvm-error-text">Failed to load following data</p>
+                    <p id="tvm-error-text" data-i18n="labelViewerErrorText"></p>
                 </div>
 
                 <div class="tvm-following-grid-container">
@@ -97,6 +97,7 @@
         </main>
     </div>
 
+    <script src="../content/core/i18n.js"></script>
     <script src="viewer.js"></script>
 </body>
 

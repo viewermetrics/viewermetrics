@@ -3,7 +3,7 @@
   "name": "Viewer Metrics",
   "default_locale": "en",
   "version": "0.9.951",
-  "description": "Track and analyze stream viewers with bot detection",
+  "description": "__MSG_extensionDescription__",
   "permissions": [
     "storage",
     "tabs",
